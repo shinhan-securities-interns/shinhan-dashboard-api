@@ -6,5 +6,6 @@ def crawlStockTalkBoard(code):
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
     titles = crawledResponse.find_all('td', class_='title')
     stripped_titles = [title.text.strip() for title in titles]
-    
-    return {"titles": stripped_titles}
+
+
+    return stripped_titles
