@@ -2,10 +2,27 @@ from utils import CrawlDataFromNaverFinance as crawl
 
 # get stock
 def crawlStockTalkBoard(code):
-    url = ("https://finance.naver.com/item/board.naver")
+    url = "https://finance.naver.com/item/board.naver"
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
-    titles = crawledResponse.find_all('td', class_='title')
-    stripped_titles = [title.text.strip() for title in titles]
 
+    # 결과를 저장할 빈 리스트
+    result_list = []
 
-    return stripped_titles
+    table = crawledResponse.find('table', {'class': 'type2'})
+    tt = table.select('tbody > tr')
+
+    for i in range(2, len(tt)):
+        if len(tt[i].select('td > span')) > 0:
+            date = tt[i].select('td > span')[0].text
+            title = tt[i].select('td.title > a')[0]['title']
+            writer = tt[i].select('td.p11')[0].text.replace('\t', '').replace('\n', '')
+            views = tt[i].select('td > span')[1].text
+            pos = tt[i].select('td > strong')[0].text
+            neg = tt[i].select('td > strong')[1].text
+            href = tt[i].select('td.title > a')[0]['href']
+
+            readUrl = 'https://finance.naver.com/'
+            result_dict = {'date': date, 'title': title, 'writer': writer, 'views': views, 'like': pos, 'dislike': neg, 'href': readUrl + href}
+            result_list.append(result_dict)
+
+    return result_list

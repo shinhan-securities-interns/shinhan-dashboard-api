@@ -5,4 +5,4 @@ router = APIRouter()
 @router.get("/")
 async def stockTalkGetBoard(code: str):
 
-    return {"title" : StockTalkService.crawlStockTalkBoard(code)}
+    return {"board" : StockTalkService.crawlStockTalkBoard(code)}
