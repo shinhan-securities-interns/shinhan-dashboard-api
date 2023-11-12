@@ -2,6 +2,28 @@ from fastapi import APIRouter
 import services.FinancialStatementService as FinancialStatementService
 router = APIRouter()
 
+#최근 연간 실적 총계"
+@router.get("/total/annual_performance")
+async def getTotalAnnual(code: str):
+
+    year_annual_info = FinancialStatementService.crawlAnnualYearInfo(code)
+    total_annual_dict = FinancialStatementService.crawlTotalAnnualInfo(code, year_annual_info)
+
+
+    return {"최근 연간 실적 총계" : total_annual_dict}
+
+#최근 분기 실적 총계
+@router.get("/total/quarter_performance")
+async def getTotalAnnual(code: str):
+
+    year_annual_info = FinancialStatementService.crawlQuaterYearInfo(code)
+    total_quarter_dict = FinancialStatementService.crawlTotalQuarterInfo(code, year_annual_info)
+
+
+    return {"최근 분기 실적 총계" : total_quarter_dict}
+
+#####
+
 #매출액(억원)
 @router.get("/revenue/annual_performance")
 async def getAnnualRevenue(code: str):

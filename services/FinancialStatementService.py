@@ -31,6 +31,7 @@ def crawlQuaterYearInfo(code):
 
     return year_quarter_info
 
+# get Corporate Performance Analysis  => FinancialInformation_RecentAnnualPerformance ( 재무 정보별 최근 연간 실적)
 def crawlAnnualInfo(code, year_info, financial_info):
     url = ("https://finance.naver.com/item/main.naver")
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
@@ -59,7 +60,7 @@ def crawlAnnualInfo(code, year_info, financial_info):
     return annual_dict
 
 
-# get Corporate Performance Analysis  => RecentQuarterlyPerformance (최근 분기 실적)
+# get Corporate Performance Analysis  => FinancialInformation_RecentQuarterlyPerformance (재무 정보별 최근 분기 실적)
 def crawlQuarterInfo(code, year_info, financial_info):
     url = ("https://finance.naver.com/item/main.naver")
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
@@ -87,3 +88,60 @@ def crawlQuarterInfo(code, year_info, financial_info):
 
     return quarter_dict
 
+## get Corporate Performance Analysis  => Total_RecentAnnualPerformance (총 최근 연간 실적)
+def crawlTotalAnnualInfo(code, year_info):
+    url = ("https://finance.naver.com/item/main.naver")
+    crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
+    
+    cop_analysis_section = crawledResponse.find("div", class_="section cop_analysis")
+    tbody = cop_analysis_section.find('tbody')
+
+    # 딕셔너리로 저장
+    annual_dict = {}
+    financial_info_dict = {}
+
+    for tr in tbody.find_all('tr'):
+        th_text = tr.find('th').text.strip()
+
+        td_elements = tr.find_all('td')
+        td_values = [td.text.strip().replace(',','') for td in td_elements[:4]]
+
+        # 헤더 이름을 키로하고 값을 값으로하는 딕셔너리 항목을 만듭니다.
+        entry = dict(zip(year_info, td_values))
+
+        # financial_info_dict에 th_text를 키로 사용하여 값을 추가
+        financial_info_dict[th_text] = entry
+
+        # financial_info_dict를 annual_dict에 추가
+        annual_dict.update(financial_info_dict)
+
+    return annual_dict
+
+# get Corporate Performance Analysis  => Total_RecentQuarterlyPerformance(총 최근 분기 실적)
+def crawlTotalQuarterInfo(code, year_info):
+    url = ("https://finance.naver.com/item/main.naver")
+    crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
+    
+    cop_analysis_section = crawledResponse.find("div", class_="section cop_analysis")
+    tbody = cop_analysis_section.find('tbody')
+
+    # 딕셔너리로 저장
+    quarter_dict = {}
+    financial_info_dict = {}
+
+    for tr in tbody.find_all('tr'):
+        th_text = tr.find('th').text.strip()
+
+        td_elements = tr.find_all('td')
+        td_values = [td.text.strip().replace(',','') for td in td_elements[4:11]]
+
+        # 헤더 이름을 키로하고 값을 값으로하는 딕셔너리 항목을 만듭니다.
+        entry = dict(zip(year_info, td_values))
+
+        # financial_info_dict에 th_text를 키로 사용하여 값을 추가
+        financial_info_dict[th_text] = entry
+
+        # financial_info_dict를 annual_dict에 추가
+        quarter_dict.update(financial_info_dict)
+
+    return quarter_dict
