@@ -16,7 +16,7 @@ async def getTotalAnnual(code: str):
 @router.get("/total/quarter_performance")
 async def getTotalAnnual(code: str):
 
-    year_annual_info = FinancialStatementService.crawlQuaterYearInfo(code)
+    year_annual_info = FinancialStatementService.crawlQuarterYearInfo(code)
     total_quarter_dict = FinancialStatementService.crawlTotalQuarterInfo(code, year_annual_info)
 
 
@@ -38,7 +38,7 @@ async def getAnnualRevenue(code: str):
 @router.get("/revenue/quarter_performance")
 async def getQuarterRevenue(code: str):
 
-    year_quarter_info = FinancialStatementService.crawlQuaterYearInfo(code)
+    year_quarter_info = FinancialStatementService.crawlQuarterYearInfo(code)
     financial_info = 'h_th2 th_cop_anal8'
     revenue_quarter_dict = FinancialStatementService.crawlQuarterInfo(code, year_quarter_info, financial_info)
 
@@ -58,7 +58,7 @@ async def getAnnualOperatingProfit(code: str):
 @router.get("/operating_profit/quarter_performance")
 async def getQuarterOperatingProfit(code: str):
 
-    year_quarter_info = FinancialStatementService.crawlQuaterYearInfo(code)
+    year_quarter_info = FinancialStatementService.crawlQuarterYearInfo(code)
     financial_info = 'h_th2 th_cop_anal9'
     operating_profit_quarter_dict = FinancialStatementService.crawlQuarterInfo(code, year_quarter_info, financial_info)
 
@@ -78,7 +78,7 @@ async def getAnnualNetProfit(code: str):
 @router.get("/net_profit/quarter_performance")
 async def getQuarterNetProfit(code: str):
 
-    year_quarter_info = FinancialStatementService.crawlQuaterYearInfo(code)
+    year_quarter_info = FinancialStatementService.crawlQuarterYearInfo(code)
     financial_info = 'h_th2 th_cop_anal10'
     net_profit_quarter_dict = FinancialStatementService.crawlQuarterInfo(code, year_quarter_info, financial_info)
 
@@ -98,7 +98,7 @@ async def getAnnualOperatingProfitMargin(code: str):
 @router.get("/operating_profit_margin/quarter_performance")
 async def getQuarterOperatingProfitMargin(code: str):
 
-    year_quarter_info = FinancialStatementService.crawlQuaterYearInfo(code)
+    year_quarter_info = FinancialStatementService.crawlQuarterYearInfo(code)
     financial_info = 'h_th2 th_cop_anal11'
     operating_profit_margin_quarter_dict = FinancialStatementService.crawlQuarterInfo(code, year_quarter_info, financial_info)
 
@@ -118,7 +118,7 @@ async def getAnnualNetProfitMargin(code: str):
 @router.get("/net_profit_margin/quarter_performance")
 async def getQuarterNetProfitMargin(code: str):
 
-    year_quarter_info = FinancialStatementService.crawlQuaterYearInfo(code)
+    year_quarter_info = FinancialStatementService.crawlQuarterYearInfo(code)
     financial_info = 'h_th2 th_cop_anal12'
     net_profit_margin_quarter_dict = FinancialStatementService.crawlQuarterInfo(code, year_quarter_info, financial_info)
 
@@ -138,7 +138,7 @@ async def getAnnualROE(code: str):
 @router.get("/roe/quarter_performance")
 async def getQuarterROE(code: str):
 
-    year_quarter_info = FinancialStatementService.crawlQuaterYearInfo(code)
+    year_quarter_info = FinancialStatementService.crawlQuarterYearInfo(code)
     financial_info = 'h_th2 th_cop_anal13'
     roe_quarter_dict = FinancialStatementService.crawlQuarterInfo(code, year_quarter_info, financial_info)
 
@@ -158,7 +158,7 @@ async def getAnnualDebtRatio(code: str):
 @router.get("/debt_ratio/quarter_performance")
 async def getQuarterDebtRatio(code: str):
 
-    year_quarter_info = FinancialStatementService.crawlQuaterYearInfo(code)
+    year_quarter_info = FinancialStatementService.crawlQuarterYearInfo(code)
     financial_info = 'h_th2 th_cop_anal14'
     debt_ratio_quarter_dict = FinancialStatementService.crawlQuarterInfo(code, year_quarter_info, financial_info)
 
@@ -178,7 +178,7 @@ async def getAnnualQuickRatio(code: str):
 @router.get("/quick_ratio/quarter_performance")
 async def getQuarterQuickRatio(code: str):
 
-    year_quarter_info = FinancialStatementService.crawlQuaterYearInfo(code)
+    year_quarter_info = FinancialStatementService.crawlQuarterYearInfo(code)
     financial_info = 'h_th2 th_cop_anal15'
     quick_ratio_quarter_dict = FinancialStatementService.crawlQuarterInfo(code, year_quarter_info, financial_info)
 
@@ -198,7 +198,7 @@ async def getAnnualRetentionRatio(code: str):
 @router.get("/retention_ratio/quarter_performance")
 async def getQuarterRetentionRatio(code: str):
 
-    year_quarter_info = FinancialStatementService.crawlQuaterYearInfo(code)
+    year_quarter_info = FinancialStatementService.crawlQuarterYearInfo(code)
     financial_info = 'h_th2 th_cop_anal16'
     retention_ratio_quarter_dict = FinancialStatementService.crawlQuarterInfo(code, year_quarter_info, financial_info)
 
@@ -218,7 +218,7 @@ async def getAnnualEPS(code: str):
 @router.get("/eps/quarter_performance")
 async def getQuarterEPS(code: str):
 
-    year_quarter_info = FinancialStatementService.crawlQuaterYearInfo(code)
+    year_quarter_info = FinancialStatementService.crawlQuarterYearInfo(code)
     financial_info = 'h_th2 th_cop_anal17'
     eps_quarter_dict = FinancialStatementService.crawlQuarterInfo(code, year_quarter_info, financial_info)
 
@@ -238,7 +238,7 @@ async def getAnnualPER(code: str):
 @router.get("/per/quarter_performance")
 async def getQuarterPER(code: str):
 
-    year_quarter_info = FinancialStatementService.crawlQuaterYearInfo(code)
+    year_quarter_info = FinancialStatementService.crawlQuarterYearInfo(code)
     financial_info = 'h_th2 th_cop_anal18'
     per_quarter_dict = FinancialStatementService.crawlQuarterInfo(code, year_quarter_info, financial_info)
 
@@ -258,7 +258,7 @@ async def getAnnualBPS(code: str):
 @router.get("/bps/quarter_performance")
 async def getQuarterBPS(code: str):
 
-    year_quarter_info = FinancialStatementService.crawlQuaterYearInfo(code)
+    year_quarter_info = FinancialStatementService.crawlQuarterYearInfo(code)
     financial_info = 'h_th2 th_cop_anal19'
     bps_quarter_dict = FinancialStatementService.crawlQuarterInfo(code, year_quarter_info, financial_info)
 
@@ -278,7 +278,7 @@ async def getAnnualPBR(code: str):
 @router.get("/pbr/quarter_performance")
 async def getQuarterPBR(code: str):
 
-    year_quarter_info = FinancialStatementService.crawlQuaterYearInfo(code)
+    year_quarter_info = FinancialStatementService.crawlQuarterYearInfo(code)
     financial_info = 'h_th2 th_cop_anal20'
     pbr_quarter_dict = FinancialStatementService.crawlQuarterInfo(code, year_quarter_info, financial_info)
 
@@ -298,7 +298,7 @@ async def getAnnualDividendPerShare(code: str):
 @router.get("/dividend_per_share/quarter_performance")
 async def getQuarterDividendPerShare(code: str):
 
-    year_quarter_info = FinancialStatementService.crawlQuaterYearInfo(code)
+    year_quarter_info = FinancialStatementService.crawlQuarterYearInfo(code)
     financial_info = 'h_th2 th_cop_anal21'
     dividend_per_share_quarter_dict = FinancialStatementService.crawlQuarterInfo(code, year_quarter_info, financial_info)
 
@@ -318,7 +318,7 @@ async def getAnnualDividendYield(code: str):
 @router.get("/dividend_yield/quarter_performance")
 async def getQuarterDividendYield(code: str):
 
-    year_quarter_info = FinancialStatementService.crawlQuaterYearInfo(code)
+    year_quarter_info = FinancialStatementService.crawlQuarterYearInfo(code)
     financial_info = 'h_th2 th_cop_anal22'
     dividend_yield_quarter_dict = FinancialStatementService.crawlQuarterInfo(code, year_quarter_info, financial_info)
 
@@ -338,7 +338,7 @@ async def getAnnualDividendPayoutRatio(code: str):
 @router.get("/dividend_payout_ratio/quarter_performance")
 async def getQuarterDividendPayoutRatio(code: str):
 
-    year_quarter_info = FinancialStatementService.crawlQuaterYearInfo(code)
+    year_quarter_info = FinancialStatementService.crawlQuarterYearInfo(code)
     financial_info = 'h_th2 th_cop_anal23'
     dividend_payout_ratio_quarter_dict = FinancialStatementService.crawlQuarterInfo(code, year_quarter_info, financial_info)
 
