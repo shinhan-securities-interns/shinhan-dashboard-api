@@ -1,3 +1,4 @@
+'''
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.ext.declarative import declarative_base
@@ -42,3 +43,4 @@ if session.query(Stock).count() == 0:
     print("주식정보 추가")
 else:
     print("주식정보가 있습니다.")
+'''

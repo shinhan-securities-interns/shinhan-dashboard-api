@@ -1,7 +1,9 @@
+import httpx
+
 from utils import CrawlDataFromNaverFinance as crawl
 
 # get stock
-def crawlStockTalkBoard(code):
+async def getCrawlStockTalkBoard(code):
     url = "https://finance.naver.com/item/board.naver"
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
 
@@ -22,7 +24,11 @@ def crawlStockTalkBoard(code):
             href = tt[i].select('td.title > a')[0]['href']
 
             readUrl = 'https://finance.naver.com/'
-            result_dict = {'date': date, 'title': title, 'writer': writer, 'views': views, 'like': pos, 'dislike': neg, 'href': readUrl + href}
+            getStockTalkPostUrl = readUrl + href
+
+            result_dict = {'date': date, 'title': title, 'writer': writer, 'views': views, 'like': pos, 'dislike': neg, 'href': getStockTalkPostUrl}
             result_list.append(result_dict)
 
     return result_list
+
+
