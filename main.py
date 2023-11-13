@@ -1,25 +1,21 @@
 import asyncio
-import logging
 
 import anyio
 from bs4 import BeautifulSoup
-from fastapi import FastAPI
+from fastapi import FastAPI, BackgroundTasks
+
+import database.RedisDriver
 from controllers.IndiStockController import router as indi_stock_router
 from controllers.FinancialStatementController import router as financial_statement_router
-from fastapi import BackgroundTasks
 
 import services.StockTalkService as StockTalkService
-import utils.CrawlDataFromNaverFinance as crawl
 
 #from database import engineconn, Stock
 import httpx;
-import json;
-from aioredis import Redis
 
 import sys
 import os
 import pandas as pd
-import io
 
 #engine = engineconn()
 #session = engine.sessionmaker()
@@ -33,11 +29,21 @@ app = FastAPI()
 app.include_router(indi_stock_router, prefix="/indi-stock", tags=["indi-stock"])
 app.include_router(financial_statement_router, prefix="/financial-statement", tags=["financial-statement"])
 
+redis0 = database.RedisDriver.RedisDriver("localhost:6322/0")
+redis1 = database.RedisDriver.RedisDriver("localhost:6322/1")
+redis2 = database.RedisDriver.RedisDriver("localhost:6322/2")
 
-class RedisStockTalkDependency:
-    def __init__(self, redis_stocktalk_contents, http_client):
-        self.redis_stocktalk_contents = redis_stocktalk_contents
-        self.http_client = http_client
+def get_app():
+    return app
+
+@app.on_event("startup")
+async def startup_event():
+    print("startup_event")
+
+    app.state.redis_stocktalk_contents = database.RedisDriver.RedisDriver("localhost:6322/3")
+    app.state.http_client = httpx.AsyncClient()
+
+    save_csv_to_redis()
 
 def save_csv_to_redis():
     # 열 이름을 직접 명시
@@ -50,52 +56,12 @@ def save_csv_to_redis():
 
         # Redis에 key-value 쌍 저장
         if index < 1000:
-            app.state.redis0.set(key, 1)
+            redis0.setKey(key, 1, 60 * 60 * 24 * 30)
         elif 1000 <= index < 2000:
-            app.state.redis1.set(key, 1)
+            redis1.setKey(key, 1, 60 * 60 * 24 * 30)
         else:
-            app.state.redis2.set(key, 1)
+            redis2.setKey(key, 1, 60 * 60 * 24 * 30)
 
-
-@app.on_event("startup")
-async def startup_event():
-
-    print("startup_event")
-    app.state.redis0 = Redis(host="localhost", port=6322, db=0, decode_responses=True)
-    app.state.redis1 = Redis(host="localhost", port=6322, db=1, decode_responses=True)
-    app.state.redis2 = Redis(host="localhost", port=6322, db=2, decode_responses=True)
-
-    app.state.redis_stocktalk_contents = Redis(host="localhost", port=6322, db=3, decode_responses=True)
-
-    app.state.http_client = httpx.AsyncClient()
-
-    save_csv_to_redis()
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    print("shutdown_event")
-    await app.state.redis0.close()
-    await app.state.redis1.close()
-    await app.state.redis2.close()
-    await app.state.redis_stocktalk_contents.close()
-
-@app.get("/")
-async def root():
-    return {"message": "Hello World"}
-
-@app.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"Hello {name}"}
-
-async def delete_keys_with_prefix(redis: Redis, prefix: str):
-    print("delete_keys_with_prefix")
-    cursor = "0"
-    while cursor != 0:
-        cursor, keys = await redis.scan(cursor, match=f"{prefix}*", count=100)
-        if keys:
-            print(f"Deleting keys: {keys}")
-            await redis.delete(*keys)
 
 @app.get("/stock-talk/{code}")
 async def crawl_stock_talk(code: str, background_tasks: BackgroundTasks):
@@ -106,39 +72,95 @@ async def crawl_stock_talk(code: str, background_tasks: BackgroundTasks):
 
     idx = 0
 
-    async def process_item(item):
-        nonlocal idx
+    inputQueue = asyncio.Queue()
+
+    async def process_item(item, idx):
         stockTalkPostUrl = item["href"]
         print("stockTalkPostUrl : " + stockTalkPostUrl)
 
-        # 기존 code_idx_* 키 레디스에서 삭제
-        await delete_keys_with_prefix(app.state.redis_stocktalk_contents, code)
+        # 기존 code_idx_* 키 레디스에서 삭제 @TODO
+        # 0부터 19까지 삭제
+        for i in range(20):
+            await app.state.redis_stocktalk_contents.deleteKeyWithPrefix(code + "_" + str(i))
 
         async with httpx.AsyncClient() as client:
             response = await client.get(stockTalkPostUrl)
+
             try:
                 soup = BeautifulSoup(response.text, 'html.parser')
                 body = soup.find('div', {'id': 'body'})
                 content = body.text
+                print(content)
 
                 # 캐시 저장
-                await cacheToRedis(code, str(content), idx)
-                idx += 1
+                await inputQueue.put((idx, code + "_" + str(idx) + "_" + content))
 
             except UnicodeDecodeError as e:
                 print(f"UnicodeDecodeError: {e}")
 
     async with anyio.create_task_group() as tg:
-        for item in result:
-            tg.start_soon(process_item, item)
+        for idx, item in enumerate(result):
+            tg.start_soon(process_item, item, idx)
+
+    await cacheToRedis(inputQueue)
 
     return response_data
 
-async def cacheToRedis(code, content, idx):
-    print(content)
-    idx = str(idx)
-    redis_key = f"{code}" + "_" + f"{idx}" + "_" + f"{content}"
-    app.state.redis_stocktalk_contents.set(redis_key, "true")
-    app.state.redis_stocktalk_contents.expire(redis_key, 60 * 60 * 24)
+async def cacheToRedis(inputQueue):
+    results = []
+
+    while not inputQueue.empty():
+        idx, item = await inputQueue.get()
+        results.append((idx, item))
+
+    results.sort(key=lambda x: x[0])
+
+    for _, item in results:
+        await app.state.redis_stocktalk_contents.setKey(item, 0, 60 * 60 * 24)
 
 
+@app.get("/stock-talk/{code}/contents/{index}")
+async def getContentsFromRedis(code: str, index: str):
+    if(await app.state.redis_stocktalk_contents.getContentsWithCodeAndIndex(code + "_" + index) == None):
+
+        result = await StockTalkService.getCrawlStockTalkBoard(code)
+        response_data = {"board": result}
+        print(response_data)
+
+        idx = 0
+
+        inputQueue = asyncio.Queue()
+
+        async def process_item(item, idx):
+            stockTalkPostUrl = item["href"]
+            print("stockTalkPostUrl : " + stockTalkPostUrl)
+
+            # 기존 code_idx_* 키 레디스에서 삭제 @TODO
+            # 0부터 19까지 삭제
+            for i in range(20):
+                await app.state.redis_stocktalk_contents.deleteKeyWithPrefix(code + "_" + str(i))
+
+            async with httpx.AsyncClient() as client:
+                response = await client.get(stockTalkPostUrl)
+
+                try:
+                    soup = BeautifulSoup(response.text, 'html.parser')
+                    body = soup.find('div', {'id': 'body'})
+                    content = body.text
+                    print(content)
+
+                    # 캐시 저장
+                    await inputQueue.put((idx, code + "_" + str(idx) + "_" + content))
+
+                except UnicodeDecodeError as e:
+                    print(f"UnicodeDecodeError: {e}")
+
+        async with anyio.create_task_group() as tg:
+            for idx, item in enumerate(result):
+                tg.start_soon(process_item, item, idx)
+
+        await cacheToRedis(inputQueue)
+
+    contents = await app.state.redis_stocktalk_contents.getContentsWithCodeAndIndex(code + "_" + index)
+
+    return contents

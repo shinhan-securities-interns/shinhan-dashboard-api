@@ -32,3 +32,11 @@ async def getCrawlStockTalkBoard(code):
     return result_list
 
 
+
+async def getStockTalk(code, idx):
+    key = code + "_" + str(idx)
+    contents = await app.state.redis_stocktalk_contents.getKey(key)
+    if contents:
+        return contents
+    else:
+        return None
