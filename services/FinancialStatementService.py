@@ -28,7 +28,7 @@ def crawlQuarterYearInfo(code):
 
     return year_quarter_info
 
-# get Corporate Performance Analysis  => FinancialInformation_RecentAnnualPerformance ( 재무 정보별 최근 연간 실적)
+# get Corporate Performance Analysis  => FinancialInformation_RecentAnnualPerformance (재무 정보별 최근 연간 실적)
 def crawlAnnualInfo(code, year_info, financial_info):
     url = ("https://finance.naver.com/item/main.naver")
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
@@ -80,8 +80,8 @@ def crawlQuarterInfo(code, year_info, financial_info):
 
     return quarter_dict
 
-## get Corporate Performance Analysis  => Total_RecentAnnualPerformance (총 최근 연간 실적)
-def crawlTotalAnnualInfo(code, year_info):
+## get Corporate Performance Analysis  => Total_RecentAnnualPerformance (최근 연간 실적 총계 - 기준 : 재무정보)
+def crawlTotalFinancialInfoAnnual(code, year_info):
     url = ("https://finance.naver.com/item/main.naver")
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
     
@@ -104,8 +104,8 @@ def crawlTotalAnnualInfo(code, year_info):
 
     return annual_dict
 
-# get Corporate Performance Analysis  => Total_RecentQuarterlyPerformance(총 최근 분기 실적)
-def crawlTotalQuarterInfo(code, year_info):
+# get Corporate Performance Analysis  => Total_RecentQuarterlyPerformance(최근 분기 실적 총계 - 기준 : 재무정보)
+def crawlTotalFinancialInfoQuarter(code, year_info):
     url = ("https://finance.naver.com/item/main.naver")
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
     
@@ -127,3 +127,66 @@ def crawlTotalQuarterInfo(code, year_info):
         quarter_dict.update(financial_info_dict)
 
     return quarter_dict
+
+## get Corporate Performance Analysis  => Total_RecentAnnualPerformance (최근 연간 실적 총계 - 기준 : 연도)
+def crawlTotalYearlyAnnual(code):
+    url = ("https://finance.naver.com/item/main.naver")
+    crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
+    
+    cop_analysis_section = crawledResponse.find("div", class_="section cop_analysis")
+    
+    # 연도 정보를 가져오기
+    annual_year_info = crawlAnnualYearInfo(code)
+
+    annual_info = {}
+
+    if cop_analysis_section:
+        tbody = cop_analysis_section.find('tbody')
+        
+        for tr in tbody.find_all('tr'):
+            th_tag = tr.find('th')
+            td_list = tr.find_all('td')
+            
+            if th_tag is not None and len(td_list) >= 4:
+                key = th_tag.text.strip()
+                values = [td.text.strip().replace(',', '') for td in td_list[0:4]]
+                
+                for year in annual_year_info:
+                    # 해당 연도의 딕셔너리가 없으면 먼저 생성
+                    if year not in annual_info:
+                        annual_info[year] = {}
+                    
+                    # 해당 연도의 딕셔너리에 값을 추가
+                    annual_info[year][key] = values[annual_year_info.index(year)]
+
+    return annual_info
+
+## get Corporate Performance Analysis  => Total_RecentAnnualPerformance (최근 분기 실적 총계 - 기준 : 연도)
+def crawlTotalYearlyQuarter(code):
+    url = ("https://finance.naver.com/item/main.naver")
+    crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
+    
+    cop_analysis_section = crawledResponse.find("div", class_="section cop_analysis")
+    
+    quarter_year_info = crawlQuarterYearInfo(code)
+
+    quarter_info = {}
+
+    if cop_analysis_section:
+        tbody = cop_analysis_section.find('tbody')
+        
+        for tr in tbody.find_all('tr'):
+            th_tag = tr.find('th')
+            td_list = tr.find_all('td')
+            
+            if th_tag is not None and len(td_list) >= 4:
+                key = th_tag.text.strip()
+                values = [td.text.strip().replace(',', '') for td in td_list[4:10]]
+                
+                for year in quarter_year_info:
+                    if year not in quarter_info:
+                        quarter_info[year] = {}
+                    
+                    quarter_info[year][key] = values[quarter_year_info.index(year)]
+
+    return quarter_info

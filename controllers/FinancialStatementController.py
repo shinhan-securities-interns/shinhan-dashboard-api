@@ -2,25 +2,43 @@ from fastapi import APIRouter
 import services.FinancialStatementService as FinancialStatementService
 router = APIRouter()
 
-#최근 연간 실적 총계"
-@router.get("/total/annual_performance")
-async def getTotalAnnual(code: str):
+
+#최근 연간 실적 총계 - 기준 : 연도
+@router.get("/total_yearly/annual_performance")
+async def getTotalYearlyAnnual(code: str):
+
+    total_yearly_annual = FinancialStatementService.crawlTotalYearlyAnnual(code)
+
+    return {"최근 연간 실적 총계 - 기준 : 연도" : total_yearly_annual}
+
+#최근 분기 실적 총계 - 기준 : 연도
+@router.get("/total_yearly/quarter_performance")
+async def getTotalYearlyQuarter(code: str):
+
+    total_yearly_quarter = FinancialStatementService.crawlTotalYearlyQuarter(code)
+
+    return {"최근 분기 실적 총계 - 기준 : 연도" : total_yearly_quarter}
+
+#####
+
+#최근 연간 실적 총계 - 기준 : 재무정보
+@router.get("/total_financialInfo/annual_performance")
+async def getTotalFinancialInfoAnnual(code: str):
 
     year_annual_info = FinancialStatementService.crawlAnnualYearInfo(code)
-    total_annual_dict = FinancialStatementService.crawlTotalAnnualInfo(code, year_annual_info)
+    total_financialInfo_annual = FinancialStatementService.crawlTotalFinancialInfoAnnual(code, year_annual_info)
 
 
-    return {"최근 연간 실적 총계" : total_annual_dict}
+    return {"최근 연간 실적 총계 - 기준 : 재무정보" : total_financialInfo_annual}
 
-#최근 분기 실적 총계
-@router.get("/total/quarter_performance")
-async def getTotalAnnual(code: str):
+#최근 분기 실적 총계 - 기준 : 재무정보
+@router.get("/total_financialInfo/quarter_performance")
+async def getTotalFinancialInfoQuarter(code: str):
 
-    year_annual_info = FinancialStatementService.crawlQuarterYearInfo(code)
-    total_quarter_dict = FinancialStatementService.crawlTotalQuarterInfo(code, year_annual_info)
+    year_quarter_info = FinancialStatementService.crawlQuarterYearInfo(code)
+    total_financialInfo_quarter = FinancialStatementService.crawlTotalFinancialInfoQuarter(code, year_quarter_info)
 
-
-    return {"최근 분기 실적 총계" : total_quarter_dict}
+    return {"최근 분기 실적 총계 - 기준 : 재무정보" : total_financialInfo_quarter}
 
 #####
 
