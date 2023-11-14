@@ -1,11 +1,15 @@
 from fastapi import FastAPI
+import threading
+import sys
+from PyQt5.QtGui import *
+from PyQt5.QtCore import *
+from PyQt5.QAxContainer import *
 from PyQt5.QtWidgets import *
 import pandas as pd
 import GiExpertControl as giLogin  # 통신모듈 - 로그인
 import GiExpertControl as giStockRTTRShow
 import GiExpertControl as TRShow
 from dotenv import load_dotenv
-import sys
 import os
 
 # load .env
@@ -13,11 +17,11 @@ load_dotenv()
 
 INDI_ID = os.environ.get('INDI_ID')
 INDI_PW = os.environ.get('INDI_PW')
-INDI_PW2 = os.environ.get('INDI_PW2')
 
 app = FastAPI()
 
 indi_app_instance = None
+
 
 class indiApp(QMainWindow):
     def __init__(self):
@@ -32,7 +36,6 @@ class indiApp(QMainWindow):
 
         self.rqidD = {}
 
-
         print(giLogin.GetCommState())
         if giLogin.GetCommState() == 0:  # 정상
             print('정상')
@@ -40,7 +43,7 @@ class indiApp(QMainWindow):
             print('비정상')
             # 본인의 ID 및 PW 넣으셔야 합니다.
             login_return = giLogin.StartIndi(
-                INDI_ID, INDI_PW, INDI_PW2, 'C:\\SHINHAN-i\\indi\\giexpertstarter.exe')
+                INDI_ID, INDI_PW, '', 'C:\\SHINHAN-i\\indi\\GiExpertStarter.exe')
             if login_return == True:
                 print("INDI 로그인 정보", "INDI 정상 호출")
                 print(giLogin.GetCommState())
@@ -51,8 +54,7 @@ class indiApp(QMainWindow):
         # time.sleep(5)
         TRShow.SetCallBack('ReceiveData', self.TRShow_ReceiveData)
 
-        # 뉴스 목록 조회
-
+    # 뉴스 목록 조회
     def search_stock_news(self):
         stbd_code = '005930'  # 종목코드
         search_date = '20231103'  # 조회일자
@@ -154,6 +156,43 @@ class indiApp(QMainWindow):
 
 def run_indi_app():
     global indi_app_instance
+
     app = QApplication(sys.argv)
     indi_app_instance = indiApp()
     sys.exit(app.exec_())
+
+
+def run_fastapi_server():
+    import uvicorn
+    uvicorn.run(app, host='127.0.0.1', port=8000)
+
+
+@app.get("/")
+async def root():
+    return {"message": "Hello World"}
+
+
+@app.get("/indi/stock/news")
+async def news_list():
+    print("call news list")
+    indi_app_instance.search_stock_news()
+    print("called news list")
+
+    return {"message": "success get stock news"}
+
+
+@app.get("/indi/stock/info")
+async def info():
+    print("call info")
+    indi_app_instance.pushButton_search_stock_info()
+    print("called info")
+
+    return {"message": "success get stock info"}
+
+
+if __name__ == "__main__":
+    indi_thread = threading.Thread(target=run_indi_app)
+    indi_thread.start()
+
+    server_thread = threading.Thread(target=run_fastapi_server)
+    server_thread.start()
