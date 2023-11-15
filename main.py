@@ -175,7 +175,11 @@ async def getContentsFromRedis(code: str, index: str):
 
     contents = await app.state.redis_stocktalk_contents.getContentsWithCodeAndIndex(code + "_" + index)
 
-    return contents
+    contentsResponse = {
+        "contents": contents
+    }
+
+    return contentsResponse
 
 ##################
 
