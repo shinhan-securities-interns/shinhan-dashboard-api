@@ -1,6 +1,6 @@
 from utils import CrawlDataFromNaverFinance as crawl
 
-def crawlAnnualYearInfo(code):
+async def crawlAnnualYearInfo(code):
     url = ("https://finance.naver.com/item/main.naver")
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
 
@@ -16,7 +16,7 @@ def crawlAnnualYearInfo(code):
     return year_annual_info
 
 
-def crawlQuarterYearInfo(code):
+async def crawlQuarterYearInfo(code):
     url = ("https://finance.naver.com/item/main.naver")
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
 
@@ -29,7 +29,7 @@ def crawlQuarterYearInfo(code):
     return year_quarter_info
 
 # get Corporate Performance Analysis  => FinancialInformation_RecentAnnualPerformance (재무 정보별 최근 연간 실적)
-def crawlAnnualInfo(code, year_info, financial_info):
+async def crawlAnnualInfo(code, year_info, financial_info):
     url = ("https://finance.naver.com/item/main.naver")
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
 
@@ -58,7 +58,7 @@ def crawlAnnualInfo(code, year_info, financial_info):
 
 
 # get Corporate Performance Analysis  => FinancialInformation_RecentQuarterlyPerformance (재무 정보별 최근 분기 실적)
-def crawlQuarterInfo(code, year_info, financial_info):
+async def crawlQuarterInfo(code, year_info, financial_info):
     url = ("https://finance.naver.com/item/main.naver")
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
     
@@ -81,7 +81,7 @@ def crawlQuarterInfo(code, year_info, financial_info):
     return quarter_dict
 
 ## get Corporate Performance Analysis  => Total_RecentAnnualPerformance (최근 연간 실적 총계 - 기준 : 재무정보)
-def crawlTotalFinancialInfoAnnual(code, year_info):
+async def crawlTotalFinancialInfoAnnual(code, year_info):
     url = ("https://finance.naver.com/item/main.naver")
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
     
@@ -105,7 +105,7 @@ def crawlTotalFinancialInfoAnnual(code, year_info):
     return annual_dict
 
 # get Corporate Performance Analysis  => Total_RecentQuarterlyPerformance(최근 분기 실적 총계 - 기준 : 재무정보)
-def crawlTotalFinancialInfoQuarter(code, year_info):
+async def crawlTotalFinancialInfoQuarter(code, year_info):
     url = ("https://finance.naver.com/item/main.naver")
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
     
@@ -129,7 +129,7 @@ def crawlTotalFinancialInfoQuarter(code, year_info):
     return quarter_dict
 
 ## get Corporate Performance Analysis  => Total_RecentAnnualPerformance (최근 연간 실적 총계 - 기준 : 연도)
-def crawlTotalYearlyAnnual(code):
+async def crawlTotalYearlyAnnual(code):
     url = ("https://finance.naver.com/item/main.naver")
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
     
@@ -162,7 +162,7 @@ def crawlTotalYearlyAnnual(code):
     return annual_info
 
 ## get Corporate Performance Analysis  => Total_RecentAnnualPerformance (최근 분기 실적 총계 - 기준 : 연도)
-def crawlTotalYearlyQuarter(code):
+async def crawlTotalYearlyQuarter(code):
     url = ("https://finance.naver.com/item/main.naver")
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
     
