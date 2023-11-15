@@ -38,12 +38,10 @@ def get_app():
 
 @app.on_event("startup")
 async def startup_event():
+    print("startup_event")
     app.state.redis0 = database.RedisDriver.RedisDriver("localhost:6322/0")
     app.state.redis1 = database.RedisDriver.RedisDriver("localhost:6322/1")
     app.state.redis2 = database.RedisDriver.RedisDriver("localhost:6322/2")
-
-    print("startup_event")
-
     app.state.redis_stocktalk_contents = database.RedisDriver.RedisDriver("localhost:6322/3")
     app.state.http_client = httpx.AsyncClient()
 
@@ -57,9 +55,9 @@ async def startup_event():
     app.state.totalFinancialInfo_AnnualAndQuarter = database.RedisDriver.RedisDriver("localhost:6322/10")
     app.state.totalYearly_AnnualAndQuarter = database.RedisDriver.RedisDriver("localhost:6322/11")
 
-    save_csv_to_redis()
+    await save_csv_to_redis()
 
-def save_csv_to_redis():
+async def save_csv_to_redis():
     # 열 이름을 직접 명시
     column_names = ['종목코드', '종목명']
     df = pd.read_csv('./단축코드_한글종목약명.csv', names=column_names)
@@ -70,11 +68,11 @@ def save_csv_to_redis():
 
         # Redis에 key-value 쌍 저장
         if index < 1000:
-            app.state.redis0.setKey(key, 1, 60 * 60 * 24 * 30)
+            await app.state.redis0.setKey(key, 1, 60 * 60 * 24 * 30)
         elif 1000 <= index < 2000:
-            app.state.redis1.setKey(key, 1, 60 * 60 * 24 * 30)
+            await app.state.redis1.setKey(key, 1, 60 * 60 * 24 * 30)
         else:
-            app.state.redis2.setKey(key, 1, 60 * 60 * 24 * 30)
+            await app.state.redis2.setKey(key, 1, 60 * 60 * 24 * 30)
 
 
 @app.get("/stock-talk/{code}")
@@ -131,7 +129,6 @@ async def cacheToRedis(inputQueue):
 
     for _, item in results:
         await app.state.redis_stocktalk_contents.setKey(item, 0, 60 * 60 * 24)
-
 
 
 @app.get("/stock-talk/{code}/contents/{index}")
