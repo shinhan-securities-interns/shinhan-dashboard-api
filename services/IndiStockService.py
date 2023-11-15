@@ -7,7 +7,8 @@ import GiExpertControl as TRShow
 from dotenv import load_dotenv
 import sys
 import os
-
+from datetime import datetime, timedelta
+import asyncio
 # load .env
 load_dotenv()
 
@@ -18,6 +19,7 @@ INDI_PW2 = os.environ.get('INDI_PW2')
 app = FastAPI()
 
 indi_app_instance = None
+
 
 class indiApp(QMainWindow):
     def __init__(self):
@@ -31,6 +33,7 @@ class indiApp(QMainWindow):
         print('run python')
 
         self.rqidD = {}
+        self.data = {}
 
 
         print(giLogin.GetCommState())
@@ -47,56 +50,122 @@ class indiApp(QMainWindow):
             else:
                 print("INDI 로그인 정보", "INDI 호출 실패")
 
-        self.search_stock_news()
+        # self.search_stock_news()
         # time.sleep(5)
         TRShow.SetCallBack('ReceiveData', self.TRShow_ReceiveData)
+        giStockRTTRShow.SetCallBack('ReceiveRTData', self.RealTimeTRShow_ReceiveRTData)
 
-        # 뉴스 목록 조회
-
-    def search_stock_news(self):
-        stbd_code = '005930'  # 종목코드
-        search_date = '20231103'  # 조회일자
-        news_type = '1'  # 뉴스타입
-
-        TR_Name = "TR_3100_D"
+    async def stock_info(self, stockCode: str):
+        self.data = None
+        TR_Name = "SY" #VI
         ret = TRShow.SetQueryName(TR_Name)
-        ret = TRShow.SetSingleData(0, stbd_code)  # 종목코드
-        ret = TRShow.SetSingleData(1, news_type)  # 뉴스 구분
-        ret = TRShow.SetSingleData(2, search_date)  # 조회 일자
-
-        rqid = TRShow.RequestData()  # 보내기(리퀘스트)
-
-        print(TRShow.GetErrorCode())
+        ret = TRShow.SetSingleData(0, stockCode)
+        rqid = TRShow.RequestData()
         print(TRShow.GetErrorMessage())
-
         print(type(rqid))
         print('Request Data rqid: ' + str(rqid))
         self.rqidD[rqid] = TR_Name
 
-        # 종목 정보 조회
+        while self.data is None:
+            # 일정 시간동안 대기하여 busy-waiting을 피합니다.
+            await asyncio.sleep(1)
 
-    def pushButton_search_stock_info(self):
-        stbd_code = '005930'  # 종목코드
+        return self.data
 
-        # 1. 재무데이터 조회
-        TR_Name = "TR4_FUNDA3"
+
+
+    async def chart_data(self, stockCode: str, chartType: str):
+        self.data = None
+        TR_Name = "TR_SCHART"
+
+        searchCnt = "300"
+        if chartType == "1": #분데이터면
+            timeInterval = "1"
+            startDay = "00000000"
+            endDay = "99999999"
+
+        else:
+            timeInterval = "1"
+            startDay = (datetime.now() - timedelta(days=50)).strftime("%Y%m%d")
+            endDay = datetime.now().strftime("%Y%m%d")
+
         ret = TRShow.SetQueryName(TR_Name)
-        ret = TRShow.SetSingleData(0, stbd_code)  # 종목코드
-        ret = TRShow.SetSingleData(1, '0')  # 개별/연결 구분
-        ret = TRShow.SetSingleData(2, '0')  # 결산/분기 구분
-
-        rqid = TRShow.RequestData()  # 보내기(리퀘스트)
-
-        print(TRShow.GetErrorCode())
+        ret = TRShow.SetSingleData(0, stockCode)
+        ret = TRShow.SetSingleData(1, chartType)
+        ret = TRShow.SetSingleData(2, timeInterval)
+        ret = TRShow.SetSingleData(3, startDay)
+        ret = TRShow.SetSingleData(4, endDay)
+        ret = TRShow.SetSingleData(5, searchCnt)
+        rqid = TRShow.RequestData()
         print(TRShow.GetErrorMessage())
-
         print(type(rqid))
         print('Request Data rqid: ' + str(rqid))
         self.rqidD[rqid] = TR_Name
 
-        # TR data 처리
+        while self.data is None:
+            # 일정 시간동안 대기하여 busy-waiting을 피합니다.
+            await asyncio.sleep(1)
 
+        return self.data
+
+
+    async def market_actions(self):
+
+        self.data = None
+        TR_Name = "IM"
+        ret = TRShow.SetQueryName(TR_Name)
+        ret = TRShow.SetSingleData(0, "*")
+        rqid = TRShow.RequestData()
+        print(TRShow.GetErrorMessage())
+        print(type(rqid))
+        print('Request Data rqid: ' + str(rqid))
+        self.rqidD[rqid] = TR_Name
+        while self.data is None:
+            # 일정 시간동안 대기하여 busy-waiting을 피합니다.
+            await asyncio.sleep(1)
+
+        return self.data
+
+
+    # 실시간 현재가
+    async def real_stock_price(self, stockCode: str):
+
+        self.data = None
+        TR_Name = "SC"
+        rqid = giStockRTTRShow.RequestRTReg(TR_Name, stockCode)
+        TRShow.GetErrorMessage()
+        print(type(rqid))
+        print('Request Data rqid: ' + str(rqid))
+        while self.data is None:
+            # 일정 시간동안 대기하여 busy-waiting을 피합니다.
+            await asyncio.sleep(1)
+
+        return self.data
+
+    # 종목 점수 조회
+    async def stock_score(self, stockCode: str):
+
+        self.data = None
+        TR_Name = "TR_SDIA_M1"  ## 종목점수
+        ret = TRShow.SetQueryName(TR_Name)
+        ret = TRShow.SetSingleData(0, stockCode)
+        rqid = TRShow.RequestData()
+        print(TRShow.GetErrorMessage())
+        print(type(rqid))
+        print('Request Data rqid: ' + str(rqid))
+        self.rqidD[rqid] = TR_Name
+        while self.data is None:
+            # 일정 시간동안 대기하여 busy-waiting을 피합니다.
+            await asyncio.sleep(0.1)
+
+        return self.data
+
+
+
+    # TR data 처리
     def TRShow_ReceiveData(self, giCtrl, rqid):
+
+        self.data = None
         print("in receive_Data:", rqid)
         print('recv rqid: {}->{}\n'.format(rqid, self.rqidD[rqid]))
         TR_Name = self.rqidD[rqid]
@@ -105,51 +174,169 @@ class indiApp(QMainWindow):
 
         print("TR_name : ", TR_Name)
 
-        # 종목 뉴스 목록 조회
-        if TR_Name == "TR_3100_D":
-            nCnt = giCtrl.GetMultiRowCount()
-            print("c")
-            print(nCnt)
+        if TR_Name == "SY":
+            stockCode = str(giCtrl.GetSingleData(1)).strip()
+            tradeExecutionProcessingTime = str(giCtrl.GetSingleData(2)).strip()
+            volatilityInterruptionReleaseTime = str(giCtrl.GetSingleData(3)).strip()
+            viApplicationCode = str(giCtrl.GetSingleData(4)).strip()
+            viTypeCode = str(giCtrl.GetSingleData(5)).strip()
+            staticVITriggerBasePrice = str(giCtrl.GetSingleData(6)).strip()
+            viTriggerPrice = str(giCtrl.GetSingleData(7)).strip()
+            staticVITriggerDeviationRate = str(giCtrl.GetSingleData(8)).strip()
+            dynamicVITriggerBasePrice = str(giCtrl.GetSingleData(9)).strip()
+            dynamicVITriggerDeviationRate = str(giCtrl.GetSingleData(10)).strip()
 
+            self.data = {
+                'stockCode': stockCode,
+                'tradeExecutionProcessingTime': tradeExecutionProcessingTime, #매매체결처리시각
+                'volatilityInterruptionReleaseTime': volatilityInterruptionReleaseTime, #VI해제시각
+                'viApplicationCode': viApplicationCode, #VI적용구분코드
+                'viTypeCode': viTypeCode, #VI종류코드
+                'staticVITriggerBasePrice': staticVITriggerBasePrice, #정적VI 발동기준가격
+                'viTriggerPrice': viTriggerPrice, #VI발동가격
+                'staticVITriggerDeviationRate': staticVITriggerDeviationRate, #정적VI 발동괴리율
+                'dynamicVITriggerBasePrice': dynamicVITriggerBasePrice, #동적VI 발동기준가격
+                'dynamicVITriggerDeviationRate': dynamicVITriggerDeviationRate #동적VI 발동괴리율
+            }
+
+
+        if TR_Name == "TR_SCHART":
+
+            self.data = None
+            nCnt = giCtrl.GetMultiRowCount()
+            print(TRShow.GetErrorMessage())
+            print(nCnt)
             for i in range(0, nCnt):
-                tr_data_output.append([])
-                tr_data_output[i].append((str(giCtrl.GetMultiData(i, 0))))  # 뉴스 일자
-                tr_data_output[i].append((str(giCtrl.GetMultiData(i, 4))))  # 뉴스 기사번호
-                tr_data_output[i].append((str(giCtrl.GetMultiData(i, 3))))  # 뉴스 구분
-                tr_data_output[i].append((str(giCtrl.GetMultiData(i, 2))))  # 뉴스 제목
-            print(TRShow.GetErrorCode())
+                row_data = {
+                    'date': str(giCtrl.GetMultiData(i, 0)),
+                    'time': str(giCtrl.GetMultiData(i, 1)),
+                    'openingPrice': str(giCtrl.GetMultiData(i, 2)),
+                    'highPrice': str(giCtrl.GetMultiData(i, 3)),
+                    'lowPrice': str(giCtrl.GetMultiData(i, 4)),
+                    'endPrice': str(giCtrl.GetMultiData(i, 5)),
+                }
+                tr_data_output.append(row_data)
+
+            self.data = tr_data_output
             print(TRShow.GetErrorMessage())
 
-        # 뉴스 내용 조회
-        if TR_Name == "TR_3100":
-            nCnt = giCtrl.GetMultiRowCount()
-            print("c")
-            print(nCnt)
-            news_article = """"""
-            for i in range(0, nCnt):
-                news_article += str(giCtrl.GetMultiData(i, 4))
-                news_article += str(giCtrl.GetMultiData(i, 5))
-                news_article += str(giCtrl.GetMultiData(i, 6))
-            print(TRShow.GetErrorCode())
+        if TR_Name == "IM":
+
+            data = {}
+            self.data = None
+            print("시장조치 실시간")
             print(TRShow.GetErrorMessage())
 
-        if TR_Name == "TR4_FUNDA3":
-            nCnt = giCtrl.GetMultiRowCount()
-            print("c")
-            print(nCnt)
+            marketCategory = str(giCtrl.GetSingleData(0)).strip()
+            action = str(giCtrl.GetSingleData(1)).strip()
+            time = str(giCtrl.GetSingleData(2)).strip()
+            state = str(giCtrl.GetSingleData(3)).strip()
+            step = str(giCtrl.GetSingleData(4)).strip()
+            referenceSecurityPriceExpansionCode = str(giCtrl.GetSingleData(5)).strip()
+            expectedPriceExpansionTime = str(giCtrl.GetSingleData(6)).strip()
+            message = str(giCtrl.GetSingleData(7)).strip()
 
-            for i in range(0, nCnt):
-                tr_data_output.append([])
-                tr_data_output[i].append(str(giCtrl.GetMultiData(i, 1)))  # 기간구분
-                tr_data_output[i].append(str(giCtrl.GetMultiData(i, 10)))  # EPS
-                tr_data_output[i].append(str(giCtrl.GetMultiData(i, 9)))  # ROE
-                tr_data_output[i].append(str(giCtrl.GetMultiData(i, 13)))  # PER
-                tr_data_output[i].append(str(giCtrl.GetMultiData(i, 12)))  # BPS
-                tr_data_output[i].append(str(giCtrl.GetMultiData(i, 15)))  # PBR
-                tr_data_output[i].append(str(giCtrl.GetMultiData(i, 6)))  # 당기순이익
-            print(tr_data_output)
-            print(TRShow.GetErrorCode())
+            self.data = {
+                'marketCategory': marketCategory,
+                'action': action,
+                'time': time,
+                'state': state,
+                'step': step,
+                'referenceSecurityPriceExpansionCode': referenceSecurityPriceExpansionCode,
+                'expectedPriceExpansionTime': expectedPriceExpansionTime,
+                'message': message
+            }
+
+        if TR_Name == "TR_SDIA_M1":
+
+            self.data = None
+            print("종목점수조회")
             print(TRShow.GetErrorMessage())
+            stockCode = str(giCtrl.GetSingleData(0)).strip()
+            stockName = str(giCtrl.GetSingleData(1)).strip()
+            updateDay = str(giCtrl.GetSingleData(2)).strip()
+            totalScore = str(giCtrl.GetSingleData(3)).strip()
+            industryAverage = str(giCtrl.GetSingleData(8)).strip()
+            rank = str(giCtrl.GetSingleData(8)).strip()
+            financialScore = str(giCtrl.GetSingleData(9)).strip()
+            financialAssessment = str(giCtrl.GetSingleData(10)).strip()
+            presentValueScore = str(giCtrl.GetSingleData(11)).strip()
+            presentValueAssessment = str(giCtrl.GetSingleData(12)).strip()
+            momentumScore = str(giCtrl.GetSingleData(13)).strip()
+            momentumAssessment = str(giCtrl.GetSingleData(14)).strip()
+            leadingPlayer = str(giCtrl.GetSingleData(15)).strip()
+            leadingPlayerAssessment = str(giCtrl.GetSingleData(16)).strip()
+            stockPriceAssessment = str(giCtrl.GetSingleData(19)).strip()
+            stockPriceDirection = str(giCtrl.GetSingleData(20)).strip()
+            stockPriceStrength = str(giCtrl.GetSingleData(21)).strip()
+            volatility = str(giCtrl.GetSingleData(22)).strip()
+            tradingVolumeAssessment = str(giCtrl.GetSingleData(23)).strip()
+            tradingVolumeDirection = str(giCtrl.GetSingleData(24)).strip()
+            tradingVolumeStrength = str(giCtrl.GetSingleData(25)).strip()
+
+            self.data = {
+                'stockCode': stockCode,
+                'stockName': stockName,
+                'updateDay': updateDay,
+                'totalScore': totalScore,
+                'industryAverage': industryAverage,
+                'rank': rank,
+                'financialScore': financialScore,
+                'financialAssessment': financialAssessment,
+                'presentValueScore': presentValueScore,
+                'presentValueAssessment': presentValueAssessment,
+                'momentumScore': momentumScore,
+                'momentumAssessment': momentumAssessment,
+                'leadingPlayer': leadingPlayer,
+                'leadingPlayerAssessment': leadingPlayerAssessment,
+                'stockPriceAssessment': stockPriceAssessment,
+                'stockPriceDirection': stockPriceDirection,
+                'stockPriceStrength': stockPriceStrength,
+                'volatility': volatility,
+                'tradingVolumeAssessment': tradingVolumeAssessment,
+                'tradingVolumeDirection': tradingVolumeDirection,
+                'tradingVolumeStrength': tradingVolumeStrength
+            }
+
+
+
+
+
+
+    def RealTimeTRShow_ReceiveRTData(self, giCtrl, RealType):
+
+        self.data = None
+        if RealType == "SC":
+            stockCode = str(giCtrl.getSingleDate(1)).strip()# 단축코드
+            realPrice = str(giCtrl.GetSingleData(3)).strip()# 현재가
+            dayOverDayCategory = str(giCtrl.GetSingleData(4)).strip()# 전일대비구분(상한/상승/보합/하한/하락)
+            dayOverDayChange = str(giCtrl.GetSingleData(5)).strip()# 전일대비
+            dayOverDayPercentage = str(giCtrl.GetSingleData(6)).strip()# 전일대비율
+            cumulativeTradingVolume = str(giCtrl.GetSingleData(7)).strip()# 누적거래량
+            cumulativeTradingValue = str(giCtrl.GetSingleData(8)).strip()# 누적거래대금
+            unitTrasactionVolume = str(giCtrl.GetSingleData(9)).strip()# 단위체결량
+            openingPrice = str(giCtrl.GetSingleData(10)).strip()# 시가
+            highPrice = str(giCtrl.GetSingleData(11)).strip()# 고가
+            lowPrice = str(giCtrl.GetSingleData(12)).strip()# 저가
+            tradingIntensity = str(giCtrl.GetSingleData(22)).strip()# 거래강도
+            trasctionIntesity = str(giCtrl.GetSingleData(24)).strip()# 체결강도
+
+            self.data = {'stockCode': stockCode,
+                         'realPrice': realPrice,
+                         'dayOverDayCategory': dayOverDayCategory,
+                         'dayOverDayChange': dayOverDayChange,
+                         'dayOverDayChange': dayOverDayChange,
+                         'dayOverDayPercentage': dayOverDayPercentage,
+                         'cumulativeTradingVolume': cumulativeTradingVolume,
+                         'cumulativeTradingValue': cumulativeTradingValue,
+                         'unitTrasactionVolume': unitTrasactionVolume,
+                         'openingPrice': openingPrice, 'highPrice': highPrice,
+                         'lowPrice': lowPrice, 'tradingIntensity': tradingIntensity,
+                         'trasctionIntesity': trasctionIntesity
+                    }
+
+
+
 
 
 def run_indi_app():

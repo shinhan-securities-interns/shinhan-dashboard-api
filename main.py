@@ -36,7 +36,7 @@ async def say_hello(name: str):
 
 def run_fastapi_server():
     import uvicorn
-    uvicorn.run(app, host='127.0.0.1', port=8000)
+    uvicorn.run(app, host='127.0.0.1', port=8001)
 
 
 if __name__ == "__main__":
