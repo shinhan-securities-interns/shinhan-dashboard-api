@@ -26,17 +26,8 @@ async def getCrawlStockTalkBoard(code):
             readUrl = 'https://finance.naver.com/'
             getStockTalkPostUrl = readUrl + href
 
-            result_dict = {'date': date, 'title': title, 'writer': writer, 'views': views, 'like': pos, 'dislike': neg, 'index': i-2,'href': getStockTalkPostUrl }
+            result_dict = {'date': date, 'title': title, 'writer': writer, 'views': views, 'like': pos, 'dislike': neg, 'index':  str(i-2), 'href': getStockTalkPostUrl}
             result_list.append(result_dict)
-
     return result_list
 
 
-
-async def getStockTalk(code, idx):
-    key = code + "_" + str(idx)
-    contents = await app.state.redis_stocktalk_contents.getKey(key)
-    if contents:
-        return contents
-    else:
-        return None

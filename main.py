@@ -10,6 +10,7 @@ from fastapi import FastAPI, BackgroundTasks
 import database.RedisDriver
 import services.FinancialStatementService as FinancialStatementService
 import services.StockTalkService as StockTalkService
+from fastapi.middleware.cors import CORSMiddleware
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(current_directory, "controllers"))
@@ -23,6 +24,14 @@ REDIS_PORT = os.environ.get('REDIS_PORT', '6322')
 
 def get_app():
     return app
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.on_event("startup")
 async def startup_event():
@@ -53,7 +62,10 @@ async def startup_event():
 async def crawl_stock_talk(code: str, background_tasks: BackgroundTasks):
     try:
         result = await StockTalkService.getCrawlStockTalkBoard(code)
-        response_data = {"board": result}
+        selected_result = result[:-3]
+
+        response_data = {"board": selected_result}
+
         print(response_data)
 
         idx = 0
@@ -64,8 +76,7 @@ async def crawl_stock_talk(code: str, background_tasks: BackgroundTasks):
                 stockTalkPostUrl = item["href"]
                 print("stockTalkPostUrl : " + stockTalkPostUrl)
 
-                # 0부터 19까지 삭제
-                for i in range(20):
+                for i in range(19):
                     await app.state.redis_stocktalk_contents.deleteKeyWithPrefix(code + "_" + str(i))
 
                 async with httpx.AsyncClient() as client:
