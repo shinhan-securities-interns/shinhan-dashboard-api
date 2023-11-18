@@ -3,3 +3,6 @@
 *.pyc
 *.xml
 *.meta
+*.idea
+app.log
+env2.yml
