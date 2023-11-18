@@ -53,7 +53,10 @@ async def startup_event():
 async def crawl_stock_talk(code: str, background_tasks: BackgroundTasks):
     try:
         result = await StockTalkService.getCrawlStockTalkBoard(code)
-        response_data = {"board": result}
+        selected_result = result[:-3]
+
+        response_data = {"board": selected_result}
+
         print(response_data)
 
         idx = 0
@@ -64,8 +67,7 @@ async def crawl_stock_talk(code: str, background_tasks: BackgroundTasks):
                 stockTalkPostUrl = item["href"]
                 print("stockTalkPostUrl : " + stockTalkPostUrl)
 
-                # 0부터 19까지 삭제
-                for i in range(20):
+                for i in range(19):
                     await app.state.redis_stocktalk_contents.deleteKeyWithPrefix(code + "_" + str(i))
 
                 async with httpx.AsyncClient() as client:
