@@ -60,7 +60,6 @@ dependencies:
   - starlette
   - tk
   - typing-extensions
-  - typing_extensions
   - tzdata
   - urllib3
   - uvicorn

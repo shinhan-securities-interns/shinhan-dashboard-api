@@ -26,7 +26,7 @@ async def getCrawlStockTalkBoard(code):
             readUrl = 'https://finance.naver.com/'
             getStockTalkPostUrl = readUrl + href
 
-            result_dict = {'date': date, 'title': title, 'writer': writer, 'views': views, 'like': pos, 'dislike': neg, 'href': getStockTalkPostUrl}
+            result_dict = {'date': date, 'title': title, 'writer': writer, 'views': views, 'like': pos, 'dislike': neg, 'index': i-2,'href': getStockTalkPostUrl }
             result_list.append(result_dict)
 
     return result_list

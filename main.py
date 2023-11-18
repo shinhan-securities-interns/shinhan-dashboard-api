@@ -10,17 +10,12 @@ from fastapi import FastAPI, BackgroundTasks
 import database.RedisDriver
 import services.FinancialStatementService as FinancialStatementService
 import services.StockTalkService as StockTalkService
-from controllers.FinancialStatementController import router as financial_statement_router
-from controllers.IndiStockController import router as indi_stock_router
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(current_directory, "controllers"))
 sys.path.append(os.path.join(current_directory, "services"))
 
 app = FastAPI()
-
-app.include_router(indi_stock_router, prefix="/indi-stock", tags=["indi-stock"])
-app.include_router(financial_statement_router, prefix="/financial-statement", tags=["financial-statement"])
 
 REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
 REDIS_PORT = os.environ.get('REDIS_PORT', '6322')
@@ -69,7 +64,6 @@ async def crawl_stock_talk(code: str, background_tasks: BackgroundTasks):
                 stockTalkPostUrl = item["href"]
                 print("stockTalkPostUrl : " + stockTalkPostUrl)
 
-                # 기존 code_idx_* 키 레디스에서 삭제 @TODO
                 # 0부터 19까지 삭제
                 for i in range(20):
                     await app.state.redis_stocktalk_contents.deleteKeyWithPrefix(code + "_" + str(i))
@@ -96,6 +90,7 @@ async def crawl_stock_talk(code: str, background_tasks: BackgroundTasks):
                 tg.start_soon(process_item, item, idx)
 
         await cacheToRedis(inputQueue)
+
         return response_data
     except Exception as e:
         print(f"An error occurred: {e}")
