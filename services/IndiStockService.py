@@ -55,7 +55,7 @@ class indiApp(QMainWindow):
         TRShow.SetCallBack('ReceiveData', self.TRShow_ReceiveData)
         giStockRTTRShow.SetCallBack('ReceiveRTData', self.RealTimeTRShow_ReceiveRTData)
 
-    async def stock_info(self, stockCode: str):
+    async def stock_vi(self, stockCode: str):
         self.data = None
         TR_Name = "SY" #VI
         ret = TRShow.SetQueryName(TR_Name)
@@ -78,15 +78,15 @@ class indiApp(QMainWindow):
         self.data = None
         TR_Name = "TR_SCHART"
 
-        searchCnt = "300"
+        searchCnt = "390"
+        timeInterval = "1"
+
         if chartType == "1": #분데이터면
-            timeInterval = "1"
             startDay = "00000000"
             endDay = "99999999"
 
         else:
-            timeInterval = "1"
-            startDay = (datetime.now() - timedelta(days=50)).strftime("%Y%m%d")
+            startDay = "20000101"
             endDay = datetime.now().strftime("%Y%m%d")
 
         ret = TRShow.SetQueryName(TR_Name)
@@ -142,6 +142,10 @@ class indiApp(QMainWindow):
 
         return self.data
 
+    # 현재가
+    async def stock_price(self, stockCode: str):
+        self.data = None
+
     # 종목 점수 조회
     async def stock_score(self, stockCode: str):
 
@@ -150,13 +154,14 @@ class indiApp(QMainWindow):
         ret = TRShow.SetQueryName(TR_Name)
         ret = TRShow.SetSingleData(0, stockCode)
         rqid = TRShow.RequestData()
-        print(TRShow.GetErrorMessage())
+
+        # print(TRShow.GetErrorMessage())
         print(type(rqid))
         print('Request Data rqid: ' + str(rqid))
         self.rqidD[rqid] = TR_Name
         while self.data is None:
             # 일정 시간동안 대기하여 busy-waiting을 피합니다.
-            await asyncio.sleep(0.1)
+            await asyncio.sleep(1)
 
         return self.data
 
@@ -249,54 +254,59 @@ class indiApp(QMainWindow):
 
         if TR_Name == "TR_SDIA_M1":
 
-            self.data = None
-            print("종목점수조회")
-            print(TRShow.GetErrorMessage())
-            stockCode = str(giCtrl.GetSingleData(0)).strip()
-            stockName = str(giCtrl.GetSingleData(1)).strip()
-            updateDay = str(giCtrl.GetSingleData(2)).strip()
-            totalScore = str(giCtrl.GetSingleData(3)).strip()
-            industryAverage = str(giCtrl.GetSingleData(8)).strip()
-            rank = str(giCtrl.GetSingleData(8)).strip()
-            financialScore = str(giCtrl.GetSingleData(9)).strip()
-            financialAssessment = str(giCtrl.GetSingleData(10)).strip()
-            presentValueScore = str(giCtrl.GetSingleData(11)).strip()
-            presentValueAssessment = str(giCtrl.GetSingleData(12)).strip()
-            momentumScore = str(giCtrl.GetSingleData(13)).strip()
-            momentumAssessment = str(giCtrl.GetSingleData(14)).strip()
-            leadingPlayer = str(giCtrl.GetSingleData(15)).strip()
-            leadingPlayerAssessment = str(giCtrl.GetSingleData(16)).strip()
-            stockPriceAssessment = str(giCtrl.GetSingleData(19)).strip()
-            stockPriceDirection = str(giCtrl.GetSingleData(20)).strip()
-            stockPriceStrength = str(giCtrl.GetSingleData(21)).strip()
-            volatility = str(giCtrl.GetSingleData(22)).strip()
-            tradingVolumeAssessment = str(giCtrl.GetSingleData(23)).strip()
-            tradingVolumeDirection = str(giCtrl.GetSingleData(24)).strip()
-            tradingVolumeStrength = str(giCtrl.GetSingleData(25)).strip()
+            try:
+                self.data = None
+                print("종목점수조회")
 
-            self.data = {
-                'stockCode': stockCode,
-                'stockName': stockName,
-                'updateDay': updateDay,
-                'totalScore': totalScore,
-                'industryAverage': industryAverage,
-                'rank': rank,
-                'financialScore': financialScore,
-                'financialAssessment': financialAssessment,
-                'presentValueScore': presentValueScore,
-                'presentValueAssessment': presentValueAssessment,
-                'momentumScore': momentumScore,
-                'momentumAssessment': momentumAssessment,
-                'leadingPlayer': leadingPlayer,
-                'leadingPlayerAssessment': leadingPlayerAssessment,
-                'stockPriceAssessment': stockPriceAssessment,
-                'stockPriceDirection': stockPriceDirection,
-                'stockPriceStrength': stockPriceStrength,
-                'volatility': volatility,
-                'tradingVolumeAssessment': tradingVolumeAssessment,
-                'tradingVolumeDirection': tradingVolumeDirection,
-                'tradingVolumeStrength': tradingVolumeStrength
-            }
+                # print(TRShow.GetErrorMessage())
+                stockCode = str(giCtrl.GetSingleData(0)).strip()
+                stockName = str(giCtrl.GetSingleData(1)).strip()
+                updateDay = str(giCtrl.GetSingleData(2)).strip()
+                totalScore = str(giCtrl.GetSingleData(3)).strip()
+                industryAverage = str(giCtrl.GetSingleData(8)).strip()
+                rank = str(giCtrl.GetSingleData(8)).strip()
+                financialScore = str(giCtrl.GetSingleData(9)).strip()
+                financialAssessment = str(giCtrl.GetSingleData(10)).strip()
+                presentValueScore = str(giCtrl.GetSingleData(11)).strip()
+                presentValueAssessment = str(giCtrl.GetSingleData(12)).strip()
+                momentumScore = str(giCtrl.GetSingleData(13)).strip()
+                momentumAssessment = str(giCtrl.GetSingleData(14)).strip()
+                leadingPlayer = str(giCtrl.GetSingleData(15)).strip()
+                leadingPlayerAssessment = str(giCtrl.GetSingleData(16)).strip()
+                stockPriceAssessment = str(giCtrl.GetSingleData(19)).strip()
+                stockPriceDirection = str(giCtrl.GetSingleData(20)).strip()
+                stockPriceStrength = str(giCtrl.GetSingleData(21)).strip()
+                volatility = str(giCtrl.GetSingleData(22)).strip()
+                tradingVolumeAssessment = str(giCtrl.GetSingleData(23)).strip()
+                tradingVolumeDirection = str(giCtrl.GetSingleData(24)).strip()
+                tradingVolumeStrength = str(giCtrl.GetSingleData(25)).strip()
+
+                self.data = {
+                    'stockCode': stockCode,
+                    'stockName': stockName,
+                    'updateDay': updateDay,
+                    'totalScore': totalScore,
+                    'industryAverage': industryAverage,
+                    'rank': rank,
+                    'financialScore': financialScore,
+                    'financialAssessment': financialAssessment,
+                    'presentValueScore': presentValueScore,
+                    'presentValueAssessment': presentValueAssessment,
+                    'momentumScore': momentumScore,
+                    'momentumAssessment': momentumAssessment,
+                    'leadingPlayer': leadingPlayer,
+                    'leadingPlayerAssessment': leadingPlayerAssessment,
+                    'stockPriceAssessment': stockPriceAssessment,
+                    'stockPriceDirection': stockPriceDirection,
+                    'stockPriceStrength': stockPriceStrength,
+                    'volatility': volatility,
+                    'tradingVolumeAssessment': tradingVolumeAssessment,
+                    'tradingVolumeDirection': tradingVolumeDirection,
+                    'tradingVolumeStrength': tradingVolumeStrength
+                }
+            except Exception as e:
+                print(f"An error occurred: {e}")
+                self.data = "조회할 수 없는 종목코드입니다."
 
 
 
@@ -307,7 +317,7 @@ class indiApp(QMainWindow):
 
         self.data = None
         if RealType == "SC":
-            stockCode = str(giCtrl.getSingleDate(1)).strip()# 단축코드
+            stockCode = str(giCtrl.GetSingleData(1)).strip()# 단축코드
             realPrice = str(giCtrl.GetSingleData(3)).strip()# 현재가
             dayOverDayCategory = str(giCtrl.GetSingleData(4)).strip()# 전일대비구분(상한/상승/보합/하한/하락)
             dayOverDayChange = str(giCtrl.GetSingleData(5)).strip()# 전일대비

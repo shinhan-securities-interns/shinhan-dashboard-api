@@ -1,0 +1,41 @@
+<!-- templates/client.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Client</title>
+</head>
+<body>
+    <h1>WebSocket Client</h1>
+    <div id="messages"></div>
+
+    <script>
+        // WebSocket 연결
+        const socket = new WebSocket("ws://localhost:8001/indi-stock/ws");
+
+        // 서버로부터 메시지 수신
+        socket.addEventListener("message", (event) => {
+            const messagesDiv = document.getElementById("messages");
+            messagesDiv.innerHTML += `<p>${event.data}</p>`;
+        });
+
+        // WebSocket 연결이 열릴 때
+        socket.addEventListener("open", (event) => {
+            console.log("WebSocket 연결이 열렸습니다.");
+        });
+
+        // WebSocket 연결이 닫힐 때
+        socket.addEventListener("close", (event) => {
+            console.log("WebSocket 연결이 닫혔습니다.");
+        });
+
+        // 페이지가 닫힐 때 WebSocket 연결 닫기
+        window.addEventListener("beforeunload", () => {
+            socket.close();
+        });
+    </script>
+</body>
+</html>

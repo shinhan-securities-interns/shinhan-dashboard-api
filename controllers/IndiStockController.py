@@ -1,16 +1,82 @@
 from fastapi import APIRouter
+from fastapi import FastAPI, BackgroundTasks, WebSocket, Request
+from starlette.websockets import WebSocketDisconnect, WebSocketState
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+import asyncio
+
 import services.IndiStockService as IndiStockService
+
 router = APIRouter()
+
+class WebSocketManager:
+    def __init__(self):
+        self.connections = set()
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.connections.add(websocket)
+
+    def disconnect(self, websocket: WebSocket):
+        self.connections.remove(websocket)
+
+    async def send_message(self, message: dict, websocket: WebSocket):
+        await websocket.send_json(message)
+
+# WebSocketManager 인스턴스 생성
+websocket_manager = WebSocketManager()
+
+app = FastAPI()
+templates = Jinja2Templates(directory="templates")
+
+# WebSocket 연결을 테스트할 수 있는 웹페이지
+@router.get("/client", response_class=HTMLResponse)
+async def client(request: Request):
+    return templates.TemplateResponse("client.html", {"request": request})
+
+@router.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    await websocket_manager.connect(websocket)
+    try:
+        print(f"client connected: {websocket.client}")
+        await websocket.send_text(f"Welcome client: {websocket.client}")
+        while True:
+            data = await websocket.receive_text()
+            print(f"message received: {data} from: {websocket.client}")
+            await websocket.send_text(f"Message text was: {data}")
+    except WebSocketDisconnect:
+        websocket_manager.disconnect(websocket)
+        print(f"client disconnected: {websocket.client}")
 
 @router.get("/")
 async def root():
     return {"message": "Hello World"}
 
+# 백그라운드 작업으로 주기적인 확인 등록
+@router.get("/check_real_time_price/{stockCode}")
+async def check_real_time_price(stockCode: str, background_tasks: BackgroundTasks):
+    # 백그라운드 작업으로 주기적인 확인 등록
+    background_tasks.add_task(check_real_time_stock_price, stockCode)
+    return {"message": "Background task scheduled for real-time stock price checking."}
 
-# 실시간 현재가(장 중에만 가능해서 내일 테스트)
+async def check_real_time_stock_price(stock_code: str):
+    while True:
+        price_info = await IndiStockService.indi_app_instance.real_stock_price(stock_code)
+
+        if websocket_manager.connections:
+            # Use the first (and only) websocket connection
+            websocket = websocket_manager.connections.pop()
+            await websocket_manager.send_message({'priceInfo': price_info}, websocket)
+            # Add the websocket back to the set for future use
+            websocket_manager.connections.add(websocket)
+
+        await asyncio.sleep(1)
+
+
+# 장 종료 후 현재가
 @router.get("/{stockCodke}/price")
 async def getRealTimeStockPrice(stockCode: str):
-    priceInfo = IndiStockService.indi_app_instance.real_stock_price(stockCode)
+    priceInfo = await IndiStockService.indi_app_instance.stock_price(stockCode)
     return {'priceInfo': priceInfo}
 
 # 종목 점수 조회
@@ -25,11 +91,6 @@ async def getStockChart(stockCode: str, chartType: str):
     chartData = await IndiStockService.indi_app_instance.chart_data(stockCode, chartType)
     return {'chartData': chartData}
 
-# 현물 마스터, 현물 종목상태정보(vi), 현물 종목 정보 조회
-@router.get("/{stockCode}/info")
-async def getStockinfo(stockCode: str):
-    stock_info = await IndiStockService.indi_app_instance.stock_info(stockCode)
-    return {'stock_info': stock_info}
 
 # 시장 조치 실시간
 @router.get("/market-actions")
