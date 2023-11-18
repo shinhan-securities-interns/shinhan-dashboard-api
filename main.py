@@ -10,7 +10,7 @@ import pandas as pd
 from bs4 import BeautifulSoup
 from fastapi import FastAPI, BackgroundTasks
 
-from elasticsearch import Elasticsearch
+#from elasticsearch import Elasticsearch
 import database.RedisDriver
 import services.FinancialStatementService as FinancialStatementService
 import services.StockTalkService as StockTalkService
@@ -29,7 +29,7 @@ app = FastAPI()
 app.include_router(indi_stock_router, prefix="/indi-stock", tags=["indi-stock"])
 app.include_router(financial_statement_router, prefix="/financial-statement", tags=["financial-statement"])
 
-es = Elasticsearch("180.210.80.208:9200")
+#es = Elasticsearch("180.210.80.208:9200")
 
 def get_app():
     return app
