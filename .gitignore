@@ -6,3 +6,4 @@
 *.idea
 app.log
 env2.yml
+docker-compose.yaml
