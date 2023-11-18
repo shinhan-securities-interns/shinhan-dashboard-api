@@ -10,6 +10,7 @@ from fastapi import FastAPI, BackgroundTasks
 import database.RedisDriver
 import services.FinancialStatementService as FinancialStatementService
 import services.StockTalkService as StockTalkService
+from fastapi.middleware.cors import CORSMiddleware
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(current_directory, "controllers"))
@@ -23,6 +24,14 @@ REDIS_PORT = os.environ.get('REDIS_PORT', '6322')
 
 def get_app():
     return app
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.on_event("startup")
 async def startup_event():
