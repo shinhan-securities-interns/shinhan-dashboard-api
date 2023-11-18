@@ -22,8 +22,9 @@ app = FastAPI()
 app.include_router(indi_stock_router, prefix="/indi-stock", tags=["indi-stock"])
 app.include_router(financial_statement_router, prefix="/financial-statement", tags=["financial-statement"])
 
-REDIS_HOST = os.environ.get('REDIS_HOST', '10.100.24.100')
-REDIS_PORT = os.environ.get('REDIS_PORT', '6379')
+REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
+REDIS_PORT = os.environ.get('REDIS_PORT', '6322')
+
 
 def get_app():
     return app
