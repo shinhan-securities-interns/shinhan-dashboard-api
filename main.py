@@ -23,6 +23,7 @@ app.include_router(indi_stock_router, prefix="/indi-stock", tags=["indi-stock"])
 app.include_router(financial_statement_router, prefix="/financial-statement", tags=["financial-statement"])
 
 REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
+REDIS_PORT = os.environ.get('REDIS_PORT', '6322')
 
 def get_app():
     return app
@@ -37,15 +38,15 @@ async def startup_event():
 
     print("startup_event")
     try:
-        app.state.redis_stocktalk_contents = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:6322/3")
+        app.state.redis_stocktalk_contents = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/3")
         app.state.http_client = httpx.AsyncClient()
 
-        app.state.revenue_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:6322/4")
-        app.state.operating_profit_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:6322/5")
-        app.state.net_profit_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:6322/6")
-        app.state.debt_ratio_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:6322/7")
-        app.state.per_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:6322/8")
-        app.state.pbr_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:6322/9")
+        app.state.revenue_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/4")
+        app.state.operating_profit_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/5")
+        app.state.net_profit_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/6")
+        app.state.debt_ratio_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/7")
+        app.state.per_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/8")
+        app.state.pbr_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/9")
 
         app.state.totalFinancialInfo_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:6322/10")
         app.state.totalYearly_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:6322/11")
