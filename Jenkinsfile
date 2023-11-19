@@ -50,11 +50,13 @@ spec:
             steps {
                 container('kaniko') {
                     script {
+                        withCredentials([string(credentialsId: 'docker_cre', variable: 'DOCKER_CREDS')]){
                         sh "executor --dockerfile=Dockerfile --context=./ --destination=${REPOSITORY}/${IMAGE}:${GIT_COMMIT}"
                     }
                 }
             }
         }
+    }
         stage('Deploy kubernetes') {
             steps {
                 script {
