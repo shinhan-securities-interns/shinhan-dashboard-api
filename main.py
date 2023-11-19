@@ -58,8 +58,8 @@ async def startup_event():
         app.state.per_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/8")
         app.state.pbr_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/9")
 
-        app.state.totalFinancialInfo_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:6322/10")
-        app.state.totalYearly_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:6322/11")
+        app.state.totalFinancialInfo_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/10")
+        app.state.totalYearly_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/11")
     except Exception as e:
         print(f"An error occurred during startup: {e}")
 
