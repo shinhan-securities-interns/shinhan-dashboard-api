@@ -25,9 +25,14 @@ REDIS_PORT = os.environ.get('REDIS_PORT', '6322')
 def get_app():
     return app
 
+origins = [
+    "http://localhost",
+    "http://localhost:3000",
+    ]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
