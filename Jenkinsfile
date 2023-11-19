@@ -50,7 +50,7 @@ spec:
             steps {
                 container('kaniko') {
                     script {
-                        withCredentials([string(credentialsId: 'docker_cre', variable: 'DOCKER_CREDS')]){
+                        withCredentials([usernamePassword(credentialsId: 'docker_cre', passwordVariable: 'jeongeun!', usernameVariable: 'jang1023')]){
                         sh "executor --dockerfile=Dockerfile --context=./ --destination=${REPOSITORY}/${IMAGE}:${GIT_COMMIT}"
                     }
                 }
