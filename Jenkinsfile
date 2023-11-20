@@ -45,6 +45,7 @@ spec:
     environment {
         REPOSITORY  = 'jang1023'
         IMAGE       = 'fastapi'
+        DOCKERHUB_CREDENTIALS = 'docker_cre'
     }
     stages {
         stage('Build Docker image') {
