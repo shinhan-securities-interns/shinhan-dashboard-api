@@ -18,8 +18,8 @@ sys.path.append(os.path.join(current_directory, "services"))
 
 app = FastAPI()
 
-REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
-REDIS_PORT = os.environ.get('REDIS_PORT', '6322')
+REDIS_HOST = os.environ.get('REDIS_HOST', 'redis-service.demo.svc.cluster.local')
+REDIS_PORT = os.environ.get('REDIS_PORT', '6379')
 
 
 def get_app():
