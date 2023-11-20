@@ -643,7 +643,7 @@ async def getQuarterTotalYearly(code: str, background_tasks: BackgroundTasks):
     response_data = {"최근 분기 실적 총계 - 기준 : 연도": result}
 
     return response_data
-'''
+
 #부채비율(%)
 @app.get("/debt_ratio/annual/{code}")
 async def getAnnualDebtRatio(code: str, background_tasks: BackgroundTasks):
@@ -749,4 +749,4 @@ async def getQuarterDebtRatio(code: str, background_tasks: BackgroundTasks):
     response_data = {"PBR(배)_최근 분기 실적": result}
 
     return response_data
-'''
+
