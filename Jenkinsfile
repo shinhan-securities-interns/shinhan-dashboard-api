@@ -52,6 +52,7 @@ spec:
                 script {
                     container('docker'){
                     sh "docker build -t ${REPOSITORY}/${IMAGE}:${GIT_COMMIT} -f Dockerfile . --platform=linux/amd64"
+                    sh "docker push ${REPOSITORY}/${IMAGE}:${GIT_COMMIT}"
                 }
             }
         }
