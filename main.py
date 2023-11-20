@@ -38,6 +38,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.on_event("startup")
 async def startup_event():
     # 로그 파일 경로 및 로그 레벨 설정
@@ -48,20 +49,40 @@ async def startup_event():
 
     print("startup_event")
     try:
-        app.state.redis_stocktalk_contents = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/3")
+        # 이미 추가한 속성인지 확인한 후 추가
+        if not hasattr(app.state, 'redis_stocktalk_contents'):
+            app.state.redis_stocktalk_contents = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/3")
+
+        if not hasattr(app.state, 'revenue_AnnualAndQuarter'):
+            app.state.revenue_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/4")
+
+        if not hasattr(app.state, 'operating_profit_AnnualAndQuarter'):
+            app.state.operating_profit_AnnualAndQuarter = database.RedisDriver.RedisDriver(
+                f"{REDIS_HOST}:{REDIS_PORT}/5")
+
+        if not hasattr(app.state, 'net_profit_AnnualAndQuarter'):
+            app.state.net_profit_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/6")
+
+        if not hasattr(app.state, 'debt_ratio_AnnualAndQuarter'):
+            app.state.debt_ratio_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/7")
+
+        if not hasattr(app.state, 'per_AnnualAndQuarter'):
+            app.state.per_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/8")
+
+        if not hasattr(app.state, 'pbr_AnnualAndQuarter'):
+            app.state.pbr_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/9")
+
+        if not hasattr(app.state, 'totalFinancialInfo_AnnualAndQuarter'):
+            app.state.totalFinancialInfo_AnnualAndQuarter = database.RedisDriver.RedisDriver(
+                f"{REDIS_HOST}:{REDIS_PORT}/10")
+
+        if not hasattr(app.state, 'totalYearly_AnnualAndQuarter'):
+            app.state.totalYearly_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/11")
+
         app.state.http_client = httpx.AsyncClient()
-
-        app.state.revenue_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/4")
-        app.state.operating_profit_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/5")
-        app.state.net_profit_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/6")
-        app.state.debt_ratio_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/7")
-        app.state.per_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/8")
-        app.state.pbr_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/9")
-
-        app.state.totalFinancialInfo_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/10")
-        app.state.totalYearly_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/11")
     except Exception as e:
         print(f"An error occurred during startup: {e}")
+
 
 @app.get("/stock-talk/{code}")
 async def crawl_stock_talk(code: str, background_tasks: BackgroundTasks):
@@ -205,6 +226,9 @@ async def getAnnualRevenue(code: str, background_tasks: BackgroundTasks):
         financial_info = 'h_th2 th_cop_anal8'
         result = await FinancialStatementService.crawlAnnualInfo(code, year_annual_info, financial_info)
 
+        if (len(result) == 0):
+            return {"매출액(억원) _최근 연간 실적" : {}}
+
         # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
         json_result = json.dumps(result)
 
@@ -231,6 +255,9 @@ async def getQuarterRevenue(code: str, background_tasks: BackgroundTasks):
         year_annual_info = await FinancialStatementService.crawlQuarterYearInfo(code)
         financial_info = 'h_th2 th_cop_anal8'
         result = await FinancialStatementService.crawlQuarterInfo(code, year_annual_info, financial_info)
+
+        if (len(result) == 0):
+            return []
 
         # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
         json_result = json.dumps(result)
@@ -261,6 +288,9 @@ async def getAnnualOperatingProfit(code: str, background_tasks: BackgroundTasks)
         financial_info = 'h_th2 th_cop_anal9'
         result = await FinancialStatementService.crawlAnnualInfo(code, year_annual_info, financial_info)
 
+        if (len(result) == 0):
+            return []
+
         # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
         json_result = json.dumps(result)
 
@@ -286,6 +316,9 @@ async def getQuarterOperatingProfit(code: str, background_tasks: BackgroundTasks
         year_annual_info = await FinancialStatementService.crawlQuarterYearInfo(code)
         financial_info = 'h_th2 th_cop_anal9'
         result = await FinancialStatementService.crawlQuarterInfo(code, year_annual_info, financial_info)
+
+        if (len(result) == 0):
+            return []
 
         # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
         json_result = json.dumps(result)
@@ -315,6 +348,9 @@ async def getAnnualNetProfit(code: str, background_tasks: BackgroundTasks):
         financial_info = 'h_th2 th_cop_anal10'
         result = await FinancialStatementService.crawlAnnualInfo(code, year_annual_info, financial_info)
 
+        if (len(result) == 0):
+            return []
+
         # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
         json_result = json.dumps(result)
 
@@ -341,6 +377,9 @@ async def getQuarterNetProfit(code: str, background_tasks: BackgroundTasks):
         financial_info = 'h_th2 th_cop_anal10'
         result = await FinancialStatementService.crawlQuarterInfo(code, year_annual_info, financial_info)
 
+        if (len(result) == 0):
+            return []
+
         # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
         json_result = json.dumps(result)
 
@@ -352,6 +391,189 @@ async def getQuarterNetProfit(code: str, background_tasks: BackgroundTasks):
     return response_data
 
 
+
+#PER(배)
+@app.get("/per/annual/{code}")
+async def getAnnualDebtRatio(code: str, background_tasks: BackgroundTasks):
+
+    # Redis에서 데이터 가져오기 시도
+    cache_key = f"{code}_PER_Annual"
+    cached_data = await app.state.per_AnnualAndQuarter.getKey(cache_key)
+
+    if cached_data:
+        # 캐시된 데이터가 있으면 JSON 역직렬화하여 반환
+        result = json.loads(cached_data)
+    else:
+        # 캐시된 데이터가 없으면 데이터 생성 및 JSON 직렬화 후 Redis에 저장
+        year_annual_info = await FinancialStatementService.crawlAnnualYearInfo(code)
+        financial_info = 'h_th2 th_cop_anal20'
+        result = await FinancialStatementService.crawlAnnualInfo(code, year_annual_info, financial_info)
+
+        if (len(result) == 0):
+            return []
+
+        # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
+        json_result = json.dumps(result)
+
+        # 결과를 캐시에 저장
+        await app.state.per_AnnualAndQuarter.setKey(cache_key, json_result, 60 * 60 * 24)
+
+    response_data = {"PER(배)_최근 연간 실적": result}
+
+    return response_data
+
+@app.get("/per/quarter/{code}")
+async def getQuarterDebtRatio(code: str, background_tasks: BackgroundTasks):
+
+    # Redis에서 데이터 가져오기 시도
+    cache_key = f"{code}_PER_Quarter"
+    cached_data = await app.state.per_AnnualAndQuarter.getKey(cache_key)
+
+    if cached_data:
+        # 캐시된 데이터가 있으면 JSON 역직렬화하여 반환
+        result = json.loads(cached_data)
+    else:
+        # 캐시된 데이터가 없으면 데이터 생성 및 JSON 직렬화 후 Redis에 저장
+        year_annual_info = await FinancialStatementService.crawlQuarterYearInfo(code)
+        financial_info = 'h_th2 th_cop_anal20'
+        result = await FinancialStatementService.crawlQuarterInfo(code, year_annual_info, financial_info)
+
+        if (len(result) == 0):
+            return []
+
+        # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
+        json_result = json.dumps(result)
+
+        # 결과를 캐시에 저장
+        await app.state.per_AnnualAndQuarter.setKey(cache_key, json_result, 60 * 60 * 24)
+
+    response_data = {"PER(배)_최근 분기 실적": result}
+
+    return response_data
+
+
+
+
+#######################################
+
+# Total Financial Info (최근 연간 실적 총계 - 기준 : 재무정보)
+@app.get("/total_financial_info/annual/{code}")
+async def getAnnualTotalFinancialInfo(code: str, background_tasks: BackgroundTasks):
+
+    # Redis에서 데이터 가져오기 시도
+    cache_key = f"{code}_TotalFinancialInfo_Annual"
+    cached_data = await app.state.totalFinancialInfo_AnnualAndQuarter.getKey(cache_key)
+
+    if cached_data:
+        # 캐시된 데이터가 있으면 JSON 역직렬화하여 반환
+        result = json.loads(cached_data)
+    else:
+        # 캐시된 데이터가 없으면 데이터 생성 및 JSON 직렬화 후 Redis에 저장
+        year_annual_info = await FinancialStatementService.crawlAnnualYearInfo(code)
+
+        if(len(year_annual_info) == 0):
+            return []
+
+        result = await FinancialStatementService.crawlTotalFinancialInfoAnnual(code, year_annual_info)
+
+        # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
+        json_result = json.dumps(result)
+
+        # 결과를 캐시에 저장
+        await app.state.totalFinancialInfo_AnnualAndQuarter.setKey(cache_key, json_result, 60 * 60 * 24)
+
+    response_data = {"최근 연간 실적 총계 - 기준 : 재무정보": result}
+
+    return response_data
+
+# Total Financial Info (최근 분기 실적 총계 - 기준 : 재무정보)
+@app.get("/total_financial_info/quarter/{code}")
+async def getQuarterTotalFinancialInfo(code: str, background_tasks: BackgroundTasks):
+
+    # Redis에서 데이터 가져오기 시도
+    cache_key = f"{code}_TotalFinancialInfo_Quarter"
+    cached_data = await app.state.totalFinancialInfo_AnnualAndQuarter.getKey(cache_key)
+
+    if cached_data:
+        # 캐시된 데이터가 있으면 JSON 역직렬화하여 반환
+        result = json.loads(cached_data)
+    else:
+        # 캐시된 데이터가 없으면 데이터 생성 및 JSON 직렬화 후 Redis에 저장
+        year_annual_info = await FinancialStatementService.crawlQuarterYearInfo(code)
+
+        if(len(year_annual_info) == 0):
+            return []
+
+        result = await FinancialStatementService.crawlTotalFinancialInfoQuarter(code, year_annual_info)
+
+        # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
+        json_result = json.dumps(result)
+
+        # 결과를 캐시에 저장
+        await app.state.totalFinancialInfo_AnnualAndQuarter.setKey(cache_key, json_result, 60 * 60 * 24)
+
+    response_data = {"최근 분기 실적 총계 - 기준 : 재무정보": result}
+
+    return response_data
+
+##########################################
+
+# Total Yearly Info (최근 연간 실적 총계 - 기준 : 연도)
+@app.get("/total_yearly/annual/{code}")
+async def getAnnualTotalYearly(code: str, background_tasks: BackgroundTasks):
+
+    # Redis에서 데이터 가져오기 시도
+    cache_key = f"{code}_TotalYearly_Annual"
+    cached_data = await app.state.totalYearly_AnnualAndQuarter.getKey(cache_key)
+
+    if cached_data:
+        # 캐시된 데이터가 있으면 JSON 역직렬화하여 반환
+        result = json.loads(cached_data)
+    else:
+        # 캐시된 데이터가 없으면 데이터 생성 및 JSON 직렬화 후 Redis에 저장
+        result = await FinancialStatementService.crawlTotalYearlyAnnual(code)
+
+        if(len(result) == 0):
+            return []
+
+        # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
+        json_result = json.dumps(result)
+
+        # 결과를 캐시에 저장
+        await app.state.totalYearly_AnnualAndQuarter.setKey(cache_key, json_result, 60 * 60 * 24)
+
+    response_data = {"최근 연간 실적 총계 - 기준 : 연도": result}
+
+    return response_data
+
+# Total Yearly Info (최근 분기 실적 총계 - 기준 : 연도)
+@app.get("/total_yearly/quarter/{code}")
+async def getQuarterTotalYearly(code: str, background_tasks: BackgroundTasks):
+
+    # Redis에서 데이터 가져오기 시도
+    cache_key = f"{code}_TotalYearly_Quarter"
+    cached_data = await app.state.totalYearly_AnnualAndQuarter.getKey(cache_key)
+
+    if cached_data:
+        # 캐시된 데이터가 있으면 JSON 역직렬화하여 반환
+        result = json.loads(cached_data)
+    else:
+        # 캐시된 데이터가 없으면 데이터 생성 및 JSON 직렬화 후 Redis에 저장
+        result = await FinancialStatementService.crawlTotalYearlyQuarter(code)
+
+        if (len(result) == 0):
+            return []
+
+        # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
+        json_result = json.dumps(result)
+
+        # 결과를 캐시에 저장
+        await app.state.totalYearly_AnnualAndQuarter.setKey(cache_key, json_result, 60 * 60 * 24)
+
+    response_data = {"최근 분기 실적 총계 - 기준 : 연도": result}
+
+    return response_data
+'''
 #부채비율(%)
 @app.get("/debt_ratio/annual/{code}")
 async def getAnnualDebtRatio(code: str, background_tasks: BackgroundTasks):
@@ -404,63 +626,8 @@ async def getQuarterDebtRatio(code: str, background_tasks: BackgroundTasks):
     response_data = {"부채비율(%)_최근 분기 실적": result}
 
     return response_data
-
-
-#PER(배)
-@app.get("/per/annual/{code}")
-async def getAnnualDebtRatio(code: str, background_tasks: BackgroundTasks):
-
-    # Redis에서 데이터 가져오기 시도
-    cache_key = f"{code}_PER_Annual"
-    cached_data = await app.state.per_AnnualAndQuarter.getKey(cache_key)
-
-    if cached_data:
-        # 캐시된 데이터가 있으면 JSON 역직렬화하여 반환
-        result = json.loads(cached_data)
-    else:
-        # 캐시된 데이터가 없으면 데이터 생성 및 JSON 직렬화 후 Redis에 저장
-        year_annual_info = await FinancialStatementService.crawlAnnualYearInfo(code)
-        financial_info = 'h_th2 th_cop_anal20'
-        result = await FinancialStatementService.crawlAnnualInfo(code, year_annual_info, financial_info)
-
-        # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
-        json_result = json.dumps(result)
-
-        # 결과를 캐시에 저장
-        await app.state.per_AnnualAndQuarter.setKey(cache_key, json_result, 60 * 60 * 24)
-
-    response_data = {"PER(배)_최근 연간 실적": result}
-
-    return response_data
-
-@app.get("/per/quarter/{code}")
-async def getQuarterDebtRatio(code: str, background_tasks: BackgroundTasks):
-
-    # Redis에서 데이터 가져오기 시도
-    cache_key = f"{code}_PER_Quarter"
-    cached_data = await app.state.per_AnnualAndQuarter.getKey(cache_key)
-
-    if cached_data:
-        # 캐시된 데이터가 있으면 JSON 역직렬화하여 반환
-        result = json.loads(cached_data)
-    else:
-        # 캐시된 데이터가 없으면 데이터 생성 및 JSON 직렬화 후 Redis에 저장
-        year_annual_info = await FinancialStatementService.crawlQuarterYearInfo(code)
-        financial_info = 'h_th2 th_cop_anal20'
-        result = await FinancialStatementService.crawlQuarterInfo(code, year_annual_info, financial_info)
-
-        # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
-        json_result = json.dumps(result)
-
-        # 결과를 캐시에 저장
-        await app.state.per_AnnualAndQuarter.setKey(cache_key, json_result, 60 * 60 * 24)
-
-    response_data = {"PER(배)_최근 분기 실적": result}
-
-    return response_data
-
-
-#PBR(배)
+    
+    #PBR(배)
 @app.get("/pbr/annual/{code}")
 async def getAnnualDebtRatio(code: str, background_tasks: BackgroundTasks):
 
@@ -512,109 +679,4 @@ async def getQuarterDebtRatio(code: str, background_tasks: BackgroundTasks):
     response_data = {"PBR(배)_최근 분기 실적": result}
 
     return response_data
-
-#######################################
-
-# Total Financial Info (최근 연간 실적 총계 - 기준 : 재무정보)
-@app.get("/total_financial_info/annual/{code}")
-async def getAnnualTotalFinancialInfo(code: str, background_tasks: BackgroundTasks):
-
-    # Redis에서 데이터 가져오기 시도
-    cache_key = f"{code}_TotalFinancialInfo_Annual"
-    cached_data = await app.state.totalFinancialInfo_AnnualAndQuarter.getKey(cache_key)
-
-    if cached_data:
-        # 캐시된 데이터가 있으면 JSON 역직렬화하여 반환
-        result = json.loads(cached_data)
-    else:
-        # 캐시된 데이터가 없으면 데이터 생성 및 JSON 직렬화 후 Redis에 저장
-        year_annual_info = await FinancialStatementService.crawlAnnualYearInfo(code)
-        result = await FinancialStatementService.crawlTotalFinancialInfoAnnual(code, year_annual_info)
-
-        # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
-        json_result = json.dumps(result)
-
-        # 결과를 캐시에 저장
-        await app.state.totalFinancialInfo_AnnualAndQuarter.setKey(cache_key, json_result, 60 * 60 * 24)
-
-    response_data = {"최근 연간 실적 총계 - 기준 : 재무정보": result}
-
-    return response_data
-
-# Total Financial Info (최근 분기 실적 총계 - 기준 : 재무정보)
-@app.get("/total_financial_info/quarter/{code}")
-async def getQuarterTotalFinancialInfo(code: str, background_tasks: BackgroundTasks):
-
-    # Redis에서 데이터 가져오기 시도
-    cache_key = f"{code}_TotalFinancialInfo_Quarter"
-    cached_data = await app.state.totalFinancialInfo_AnnualAndQuarter.getKey(cache_key)
-
-    if cached_data:
-        # 캐시된 데이터가 있으면 JSON 역직렬화하여 반환
-        result = json.loads(cached_data)
-    else:
-        # 캐시된 데이터가 없으면 데이터 생성 및 JSON 직렬화 후 Redis에 저장
-        year_annual_info = await FinancialStatementService.crawlQuarterYearInfo(code)
-        result = await FinancialStatementService.crawlTotalFinancialInfoQuarter(code, year_annual_info)
-
-        # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
-        json_result = json.dumps(result)
-
-        # 결과를 캐시에 저장
-        await app.state.totalFinancialInfo_AnnualAndQuarter.setKey(cache_key, json_result, 60 * 60 * 24)
-
-    response_data = {"최근 분기 실적 총계 - 기준 : 재무정보": result}
-
-    return response_data
-
-##########################################
-
-# Total Yearly Info (최근 연간 실적 총계 - 기준 : 연도)
-@app.get("/total_yearly/annual/{code}")
-async def getAnnualTotalYearly(code: str, background_tasks: BackgroundTasks):
-
-    # Redis에서 데이터 가져오기 시도
-    cache_key = f"{code}_TotalYearly_Annual"
-    cached_data = await app.state.totalYearly_AnnualAndQuarter.getKey(cache_key)
-
-    if cached_data:
-        # 캐시된 데이터가 있으면 JSON 역직렬화하여 반환
-        result = json.loads(cached_data)
-    else:
-        # 캐시된 데이터가 없으면 데이터 생성 및 JSON 직렬화 후 Redis에 저장
-        result = await FinancialStatementService.crawlTotalYearlyAnnual(code)
-
-        # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
-        json_result = json.dumps(result)
-
-        # 결과를 캐시에 저장
-        await app.state.totalYearly_AnnualAndQuarter.setKey(cache_key, json_result, 60 * 60 * 24)
-
-    response_data = {"최근 연간 실적 총계 - 기준 : 연도": result}
-
-    return response_data
-
-# Total Yearly Info (최근 분기 실적 총계 - 기준 : 연도)
-@app.get("/total_yearly/quarter/{code}")
-async def getQuarterTotalYearly(code: str, background_tasks: BackgroundTasks):
-
-    # Redis에서 데이터 가져오기 시도
-    cache_key = f"{code}_TotalYearly_Quarter"
-    cached_data = await app.state.totalYearly_AnnualAndQuarter.getKey(cache_key)
-
-    if cached_data:
-        # 캐시된 데이터가 있으면 JSON 역직렬화하여 반환
-        result = json.loads(cached_data)
-    else:
-        # 캐시된 데이터가 없으면 데이터 생성 및 JSON 직렬화 후 Redis에 저장
-        result = await FinancialStatementService.crawlTotalYearlyQuarter(code)
-
-        # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
-        json_result = json.dumps(result)
-
-        # 결과를 캐시에 저장
-        await app.state.totalYearly_AnnualAndQuarter.setKey(cache_key, json_result, 60 * 60 * 24)
-
-    response_data = {"최근 분기 실적 총계 - 기준 : 연도": result}
-
-    return response_data
+'''

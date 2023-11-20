@@ -6,7 +6,11 @@ async def crawlAnnualYearInfo(code):
 
     # div 클래스 이름이 "section cop_analysis"인 섹션을 찾음
     cop_analysis_section = crawledResponse.find("div", class_="section cop_analysis")
-    # 2번째 tr 요소를 찾음 
+
+    if(cop_analysis_section is None):
+        return []
+
+    # 2번째 tr 요소를 찾음
     second_tr = cop_analysis_section.find_all("tr")[1]
 
     # 날짜 정보 가져오기 
@@ -21,6 +25,10 @@ async def crawlQuarterYearInfo(code):
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
 
     cop_analysis_section = crawledResponse.find("div", class_="section cop_analysis")
+
+    if (cop_analysis_section is None):
+        return []
+
     second_tr = cop_analysis_section.find_all("tr")[1]
 
     col_headers = second_tr.find_all("th", {"scope": "col"})
@@ -34,6 +42,9 @@ async def crawlAnnualInfo(code, year_info, financial_info):
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
 
     th_elements = crawledResponse.find_all('th', class_= financial_info)
+
+    if (th_elements is None):
+        return []
 
     #딕셔너리로 저장
     annual_dict = {}
@@ -63,7 +74,10 @@ async def crawlQuarterInfo(code, year_info, financial_info):
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
     
     th_elements = crawledResponse.find_all('th', class_= financial_info)
-    
+
+    if (th_elements is None):
+        return []
+
     # 딕셔너리로 저장
     quarter_dict = {}
 
@@ -85,14 +99,18 @@ async def crawlTotalFinancialInfoAnnual(code, year_info):
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
 
     cop_analysis_section = crawledResponse.find("div", class_="section cop_analysis")
+
+    if (cop_analysis_section is None):
+        return []
+
     tbody = cop_analysis_section.find('tbody')
 
     # 딕셔너리로 저장
     annual_dict = {}
     financial_info_dict = {}
 
-    target_class_names = ["th_cop_anal8", "th_cop_anal9", "th_cop_anal10", "th_cop_anal14",
-                          "th_cop_anal20", "th_cop_anal21"]
+    target_class_names = ["th_cop_anal8", "th_cop_anal9", "th_cop_anal10", 
+                          "th_cop_anal20"]
 
     for tr in tbody.find_all('tr'):
         th_text = tr.find('th').text.strip()
@@ -117,14 +135,18 @@ async def crawlTotalFinancialInfoQuarter(code, year_info):
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
     
     cop_analysis_section = crawledResponse.find("div", class_="section cop_analysis")
+
+    if (cop_analysis_section is None):
+        return []
+
     tbody = cop_analysis_section.find('tbody')
 
     # 딕셔너리로 저장
     quarter_dict = {}
     financial_info_dict = {}
 
-    target_class_names = ["th_cop_anal8", "th_cop_anal9", "th_cop_anal10", "th_cop_anal14",
-                          "th_cop_anal20", "th_cop_anal21"]
+    target_class_names = ["th_cop_anal8", "th_cop_anal9", "th_cop_anal10",
+                          "th_cop_anal20" ]
 
     for tr in tbody.find_all('tr'):
         th_text = tr.find('th').text.strip()
@@ -149,14 +171,17 @@ async def crawlTotalYearlyAnnual(code):
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
     
     cop_analysis_section = crawledResponse.find("div", class_="section cop_analysis")
-    
+
+    if (cop_analysis_section is None):
+        return []
+
     # 연도 정보를 가져오기
     annual_year_info = await crawlAnnualYearInfo(code)
 
     annual_info = {}
 
-    target_class_names = ["th_cop_anal8", "th_cop_anal9", "th_cop_anal10", "th_cop_anal14",
-                          "th_cop_anal20", "th_cop_anal21"]
+    target_class_names = ["th_cop_anal8", "th_cop_anal9", "th_cop_anal10", 
+                          "th_cop_anal20" ]
 
     if cop_analysis_section:
         tbody = cop_analysis_section.find('tbody')
@@ -190,13 +215,16 @@ async def crawlTotalYearlyQuarter(code):
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
     
     cop_analysis_section = crawledResponse.find("div", class_="section cop_analysis")
-    
+
+    if (cop_analysis_section is None):
+        return []
+
     quarter_year_info = await crawlQuarterYearInfo(code)
 
     quarter_info = {}
 
-    target_class_names = ["th_cop_anal8", "th_cop_anal9", "th_cop_anal10", "th_cop_anal14",
-                          "th_cop_anal20", "th_cop_anal21"]
+    target_class_names = ["th_cop_anal8", "th_cop_anal9", "th_cop_anal10", 
+                          "th_cop_anal20" ]
 
     if cop_analysis_section:
         tbody = cop_analysis_section.find('tbody')
