@@ -11,6 +11,7 @@ import database.RedisDriver
 import services.FinancialStatementService as FinancialStatementService
 import services.StockTalkService as StockTalkService
 from fastapi.middleware.cors import CORSMiddleware
+from utils.CrawlDataFromNaverFinance import GetKospiKosdaqValues
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(current_directory, "controllers"))
@@ -205,6 +206,10 @@ async def getContentsFromRedis(code: str, index: str):
     except Exception as e:
         print(f"An error occurred: {e}")
         return {"error": str(e)}
+
+@app.get("/get/kospi/kosdaq")
+async def getKospiKosdaq():
+    return GetKospiKosdaqValues()
 
 
 ##################
