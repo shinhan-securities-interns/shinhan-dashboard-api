@@ -55,6 +55,14 @@ spec:
                 }
             }
         }
+        stage('Approval'){
+          steps{
+            slackSend(color: '#FF0000', message: "Please Check Deployment Approval (${env.JOB_URL})")
+            timeout(time: 15, unit:"MINUTES"){
+              input message: 'Do you want to approve the deployment?', ok:'YES'
+            }
+          }
+        }
         stage('Deploy kubernetes ') {
             steps {
                 script {
@@ -62,7 +70,7 @@ spec:
                         container('kubectl') {
                             sh """
                             export KUBECONFIG=\$KUBECONFIG
-                            kubectl set image deployment/fastapi-app lsb8375/my-s2d:1.5=${REPOSITORY}/${IMAGE}:${GIT_COMMIT} -n demo
+                            kubectl set image deployment/fastapi-app fastapi-app=${REPOSITORY}/${IMAGE}:${GIT_COMMIT} -n demo
                             kubectl rollout restart deployment/fastapi-app -n demo
                             """
                         }
