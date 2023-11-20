@@ -45,17 +45,16 @@ spec:
     environment {
         REPOSITORY  = 'jang1023'
         IMAGE       = 'fastapi'
-        DOCKERHUB_CREDENTIALS = 'docker_cre'
+        DOCKERHUB_CREDENTIALS = credentials('docker_cre')
     }
     stages {
         stage('Build Docker image') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'docker_cre', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]){
                     container('docker'){
+                    sh "echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin"
                     sh "docker build -t ${REPOSITORY}/${IMAGE}:${GIT_COMMIT} -f Dockerfile . --platform=linux/amd64"
                     sh "docker push ${REPOSITORY}/${IMAGE}:${GIT_COMMIT}"
-                }
             }
         }
     }
