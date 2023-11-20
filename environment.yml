@@ -2,6 +2,7 @@ name: mys2d
 channels:
   - conda-forge
   - defaults
+  - PyPI
 dependencies:
   - python=3.10
   - aioredis
@@ -34,7 +35,7 @@ dependencies:
   - libgfortran5
   - libopenblas
   - llvm-openmp
-  - ncurses
+  #- ncurses
   - numexpr
   - numpy
   - numpy-base
@@ -48,7 +49,7 @@ dependencies:
   - python-dateutil
   - python-tzdata=2023.3
   - pytz=2023.3.post1
-  - readline
+  #- readline
   - redis-py
   - requests
   - rfc3986
@@ -67,3 +68,8 @@ dependencies:
   - wrapt
   - xz
   - zlib
+  - mlflow
+  - tensorflow
+  - seaborn
+  - xgboost
+  - jupyter

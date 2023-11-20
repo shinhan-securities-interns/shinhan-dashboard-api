@@ -4,6 +4,7 @@ import os
 import sys
 import logging
 import anyio
+
 import httpx
 from bs4 import BeautifulSoup
 from fastapi import FastAPI, BackgroundTasks
@@ -11,6 +12,11 @@ import database.RedisDriver
 import services.FinancialStatementService as FinancialStatementService
 import services.StockTalkService as StockTalkService
 from fastapi.middleware.cors import CORSMiddleware
+
+import mlflow
+from mlflow.schemas import PredictIn, PredictOut
+from mlflow.data import preprocess_data
+import numpy as np
 
 current_directory = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(current_directory, "controllers"))
@@ -63,6 +69,48 @@ async def startup_event():
     except Exception as e:
         print(f"An error occurred during startup: {e}")
 
+########################################
+def get_model_production():
+    mlflow.set_tracking_uri("http://127.0.0.1:5000")
+    model_uri = "models:/stock_prediction/production"
+    model_p = mlflow.keras.load_model(model_uri)
+    return model_p
+MODEL = get_model_production()
+
+
+@app.post("/predict/", response_model=PredictOut)
+async def predict_stock(predict_in: PredictIn):
+    stock_code = predict_in.STOCK_CODE
+
+    train_data, test_data, y_test = preprocess_data(stock_code=stock_code, window_size=50, batch_size=32)
+    pred = MODEL.predict(test_data)
+    print(pred)
+
+    # 2차원 배열을 1차원 리스트로 변환
+    stock_predict = pred.flatten().tolist()
+    print(stock_predict)
+
+    # 실제 값과 예측값을 numpy 배열로 변환
+    actual_prices = np.asarray(y_test)[50:]
+    print(f"actual_prices: {actual_prices}")
+    predicted_prices = np.asarray(pred).flatten()  # pred가 2차원 배열인 경우 flatten 사용
+    print(f"predicted_prices: {predicted_prices}")
+    # 실제 값과 예측값의 다음 날 변화 계산
+    actual_changes = actual_prices[1:] - actual_prices[:-1]
+    predicted_changes = (predicted_prices[-1]) - predicted_prices[-2]
+
+    # p = predicted_prices[-1] - predicted_prices[-2]
+
+    print("==========================================================")
+    # 변화 방향 예측
+    predicted_directions = "up" if predicted_changes > 0 else "down"
+    # predicted_directions 배열의 마지막 요소 추출
+    most_recent_prediction = predicted_directions
+    print(most_recent_prediction)
+
+    return PredictOut(stock_predict=stock_predict, result=most_recent_prediction)
+
+#########################################
 @app.get("/stock-talk/{code}")
 async def crawl_stock_talk(code: str, background_tasks: BackgroundTasks):
     try:
