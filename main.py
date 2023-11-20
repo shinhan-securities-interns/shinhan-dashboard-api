@@ -5,14 +5,16 @@ import sys
 import logging
 import anyio
 import httpx
+from apscheduler.triggers.interval import IntervalTrigger
 from bs4 import BeautifulSoup
 from fastapi import FastAPI, BackgroundTasks
 import database.RedisDriver
 import services.FinancialStatementService as FinancialStatementService
 import services.StockTalkService as StockTalkService
 from fastapi.middleware.cors import CORSMiddleware
-from utils.CrawlDataFromNaverFinance import GetKospiKosdaqValues
-
+import requests
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from apscheduler.triggers.cron import CronTrigger
 current_directory = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(current_directory, "controllers"))
 sys.path.append(os.path.join(current_directory, "services"))
@@ -21,6 +23,7 @@ app = FastAPI()
 
 REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
 REDIS_PORT = os.environ.get('REDIS_PORT', '6322')
+
 
 
 def get_app():
@@ -50,6 +53,8 @@ async def startup_event():
 
     print("startup_event")
     try:
+        if not hasattr(app.state, 'redis_KospiKosdaq_contents'):
+            app.state.redis_KospiKosdaq_contents = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/0")
         # 이미 추가한 속성인지 확인한 후 추가
         if not hasattr(app.state, 'redis_stocktalk_contents'):
             app.state.redis_stocktalk_contents = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/3")
@@ -81,6 +86,8 @@ async def startup_event():
             app.state.totalYearly_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/11")
 
         app.state.http_client = httpx.AsyncClient()
+        asyncio.create_task(cacheKospiKosdaq())
+
     except Exception as e:
         print(f"An error occurred during startup: {e}")
 
@@ -207,10 +214,71 @@ async def getContentsFromRedis(code: str, index: str):
         print(f"An error occurred: {e}")
         return {"error": str(e)}
 
+async def cacheKospiKosdaq():
+    try:
+        basic_url = "https://finance.naver.com/sise/"
+        async with httpx.AsyncClient() as client:
+            response = await client.get(basic_url, headers={'User-Agent': 'Mozilla/5.0'})
+            response.raise_for_status()
+
+
+        source = response.text
+
+        soup = BeautifulSoup(source, 'html.parser')
+
+        kospi_now = soup.find(id="KOSPI_now").get_text()
+
+        # "mnu" 클래스를 가진 요소를 찾음
+        mnu_element = soup.find('a', class_="mnu")
+        kospi_ud = mnu_element.find_all(recursive=False)[-1].get_text()
+        kospi_ud = kospi_ud.replace("\n", "")
+        kospi_ud = kospi_ud[:-2]
+
+        kospi_num = kospi_ud.split(" ")[0]
+        kospi_ratio = kospi_ud.split(" ")[1]
+
+        kosdaq_now = soup.find(id="KOSDAQ_now").get_text()
+
+        mnu2_element = soup.find('a', class_="mnu2")
+        kosdaq_ud = mnu2_element.find_all(recursive=False)[-1].get_text()
+        print(kosdaq_ud)
+
+        kosdaq_ud = kosdaq_ud.replace("\n", "")
+        kosdaq_ud = kosdaq_ud[:-2]
+
+        kosdaq_num = kosdaq_ud.split(" ")[0]
+        kosdaq_ratio = kosdaq_ud.split(" ")[1]
+
+        await app.state.redis_KospiKosdaq_contents.setKey("kospi_now", kospi_now, 60 * 60 * 24)
+        await app.state.redis_KospiKosdaq_contents.setKey("kospi_num", kospi_num, 60 * 60 * 24)
+        await app.state.redis_KospiKosdaq_contents.setKey("kospi_ratio", kospi_ratio, 60 * 60 * 24)
+
+        await app.state.redis_KospiKosdaq_contents.setKey("kosdaq_now", kosdaq_now, 60 * 60 * 24)
+        await app.state.redis_KospiKosdaq_contents.setKey("kosdaq_num", kosdaq_num, 60 * 60 * 24)
+        await app.state.redis_KospiKosdaq_contents.setKey("kosdaq_ratio", kosdaq_ratio, 60 * 60 * 24)
+
+
+    except Exception as e:
+        print(f"오류 발생: {e}")
+        return None
+
 @app.get("/get/kospi/kosdaq")
 async def getKospiKosdaq():
-    return GetKospiKosdaqValues()
+    return {
+        "kospi_now": await app.state.redis_KospiKosdaq_contents.getKey("kospi_now"),
+        "kospi_num": await app.state.redis_KospiKosdaq_contents.getKey("kospi_num"),
+        "kospi_ratio": await app.state.redis_KospiKosdaq_contents.getKey("kospi_ratio"),
 
+        "kosdaq_now": await app.state.redis_KospiKosdaq_contents.getKey("kosdaq_now"),
+        "kosdaq_num": await app.state.redis_KospiKosdaq_contents.getKey("kosdaq_num"),
+        "kosdaq_ratio": await app.state.redis_KospiKosdaq_contents.getKey("kosdaq_ratio")
+    }
+
+scheduler = AsyncIOScheduler()
+scheduler.add_job(cacheKospiKosdaq, IntervalTrigger(seconds=5))
+
+# 스케줄러 시작
+scheduler.start()
 
 ##################
 
