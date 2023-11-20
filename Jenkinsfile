@@ -50,7 +50,7 @@ spec:
             steps {
                 container('kaniko') {
                     script {
-                        sh "executor --dockerfile=Dockerfile --context=./ --destination=${REPOSITORY}/${IMAGE}:${GIT_COMMIT}"
+                        sh "executor --dockerfile=Dockerfile --context=./ --destination=${REPOSITORY}/${IMAGE}:${GIT_COMMIT} --platform=linux/amd64"
                     }
                 }
             }
