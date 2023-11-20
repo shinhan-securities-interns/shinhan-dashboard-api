@@ -19,11 +19,15 @@ async def crawlAnnualYearInfo(code):
 async def crawlQuarterYearInfo(code):
     url = ("https://finance.naver.com/item/main.naver")
     crawledResponse = crawl.CrawlDataFromNaverFinance(url, code)
-
+    if(crawledResponse.find("div", class_="section cop_analysis") is None) :
+        return []
+    
     cop_analysis_section = crawledResponse.find("div", class_="section cop_analysis")
+    
     second_tr = cop_analysis_section.find_all("tr")[1]
-
+    
     col_headers = second_tr.find_all("th", {"scope": "col"})
+    
     year_quarter_info = [th.text.strip() for th in col_headers[4:10]]
 
     return year_quarter_info
