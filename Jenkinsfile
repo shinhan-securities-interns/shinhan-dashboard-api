@@ -9,6 +9,14 @@ spec:
   nodeName: k8s-worker01
   dnsPolicy: Default
   containers:
+  - name: docker
+      image: docker:latest
+      command:
+        - cat
+      tty: true
+      volumeMounts:
+      - name: dockersock
+        mountPath: /var/run/docker.sock
   - name: kubectl
     namespace: jenkins
     image: bitnami/kubectl:latest
@@ -19,6 +27,9 @@ spec:
     securityContext:
       runAsUser: 0
   volumes:
+  - name: dockersock
+    hostPath:
+      path: /var/run/docker.sock
   - name: jenkins-docker-cfg
     namespace: jenkins
     projected:
@@ -39,10 +50,12 @@ spec:
         stage('Build Docker image') {
             steps {
                 script {
+                    container('docker'){
                     sh "docker build -t ${REPOSITORY}/${IMAGE}:${GIT_COMMIT} -f Dockerfile . --platform=linux/amd64"
                 }
             }
         }
+    }
         stage('Approval'){
           steps{
             slackSend(color: '#FF0000', message: "Please Check Deployment Approval (${env.JOB_URL})")
