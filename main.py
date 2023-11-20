@@ -29,10 +29,7 @@ REDIS_PORT = os.environ.get('REDIS_PORT', '6322')
 def get_app():
     return app
 
-origins = [
-    "http://localhost",
-    "http://localhost:3000",
-    ]
+origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -262,7 +259,7 @@ async def cacheKospiKosdaq():
         print(f"오류 발생: {e}")
         return None
 
-@app.get("/get/kospi/kosdaq")
+@app.get("/kospi/kosdaq")
 async def getKospiKosdaq():
     return {
         "kospi_now": await app.state.redis_KospiKosdaq_contents.getKey("kospi_now"),
