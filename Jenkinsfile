@@ -10,13 +10,13 @@ spec:
   dnsPolicy: Default
   containers:
   - name: docker
-      image: docker:latest
-      command:
-        - cat
-      tty: true
-      volumeMounts:
-      - name: dockersock
-        mountPath: /var/run/docker.sock
+    image: docker:latest
+    command:
+      - cat
+    tty: true
+    volumeMounts:
+    - name: dockersock
+      mountPath: /var/run/docker.sock
   - name: kubectl
     namespace: jenkins
     image: bitnami/kubectl:latest
