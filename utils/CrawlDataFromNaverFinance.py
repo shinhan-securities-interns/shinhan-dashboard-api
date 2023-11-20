@@ -36,19 +36,30 @@ def GetKospiKosdaqValues():
         kospi_ud = kospi_ud.replace("\n", "")
         kospi_ud = kospi_ud[:-2]
 
+        kospi_num = kospi_ud.split(" ")[0]
+        kospi_ratio = kospi_ud.split(" ")[1]
+
         kosdaq_now = soup.find(id="KOSDAQ_now").get_text()
 
         mnu2_element = soup.find('a', class_="mnu2")
         kosdaq_ud = mnu2_element.find_all(recursive=False)[-1].get_text()
-        kosdaq_ud = kosdaq_ud.replace("\n", "")
-        kosdaq_ud = kospi_ud[:-2]
+        print(kosdaq_ud)
 
+        kosdaq_ud = kosdaq_ud.replace("\n", "")
+        kosdaq_ud = kosdaq_ud[:-2]
+
+        kosdaq_num = kosdaq_ud.split(" ")[0]
+        kosdaq_ratio = kosdaq_ud.split(" ")[1]
 
         return {
             "kospi_now" : kospi_now,
-            "kospi_ud" : kospi_ud,
+            "kospi_num" : kospi_num,
+            "kospi_ratio" : kospi_ratio,
+
             "kosdaq_now": kosdaq_now,
-            "kosdaq_ud": kosdaq_ud
+            "kosdaq_num" : kosdaq_num,
+            "kosdaq_ratio" : kosdaq_ratio
+
         }
 
     except Exception as e:
