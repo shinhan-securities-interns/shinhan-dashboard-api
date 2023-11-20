@@ -4,21 +4,11 @@ pipeline {
             yaml """
 kind: Pod
 metadata:
-  name: kaniko
+  name: demoPod
 spec:
   nodeName: k8s-worker01
   dnsPolicy: Default
   containers:
-  - name: kaniko
-    namespace: jenkins
-    image: gcr.io/kaniko-project/executor:debug
-    imagePullPolicy: Always
-    command:
-    - /busybox/cat
-    tty: true
-    volumeMounts:
-      - name: jenkins-docker-cfg
-        mountPath: /kaniko/.docker
   - name: kubectl
     namespace: jenkins
     image: bitnami/kubectl:latest
@@ -48,10 +38,8 @@ spec:
     stages {
         stage('Build Docker image') {
             steps {
-                container('kaniko') {
-                    script {
-                        sh "executor --dockerfile=Dockerfile --context=./ --destination=${REPOSITORY}/${IMAGE}:${GIT_COMMIT} --linux/amd64"
-                    }
+                script {
+                    sh "docker build -t ${REPOSITORY}/${IMAGE}:${GIT_COMMIT} -f Dockerfile . --platform=linux/amd64"
                 }
             }
         }
