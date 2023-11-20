@@ -51,6 +51,7 @@ spec:
         stage('Build Docker image') {
             steps {
                 script {
+                    withCredentials([usernamePassword(credentialsId: 'docker_cre', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]){
                     container('docker'){
                     sh "docker build -t ${REPOSITORY}/${IMAGE}:${GIT_COMMIT} -f Dockerfile . --platform=linux/amd64"
                     sh "docker push ${REPOSITORY}/${IMAGE}:${GIT_COMMIT}"
@@ -58,6 +59,7 @@ spec:
             }
         }
     }
+}
         stage('Approval'){
           steps{
             slackSend(color: '#FF0000', message: "Please Check Deployment Approval (${env.JOB_URL})")
