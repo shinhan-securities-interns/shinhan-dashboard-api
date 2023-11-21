@@ -67,7 +67,7 @@ spec:
             }
           }
         }
-        stage('Deploy kubernetes ') {
+        stage('Deploy kubernetes') {
             steps {
                 script {
                     withCredentials([file(credentialsId: 'kubeconfig', variable: 'KUBECONFIG')]) {
