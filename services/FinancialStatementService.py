@@ -109,8 +109,8 @@ async def crawlTotalFinancialInfoAnnual(code, year_info):
     annual_dict = {}
     financial_info_dict = {}
 
-    target_class_names = ["th_cop_anal8", "th_cop_anal9", "th_cop_anal10", 
-                          "th_cop_anal20"]
+    target_class_names = ["th_cop_anal8", "th_cop_anal9", "th_cop_anal10", "th_cop_anal14",
+                          "th_cop_anal20", "th_cop_anal21"]
 
     for tr in tbody.find_all('tr'):
         th_text = tr.find('th').text.strip()
@@ -145,8 +145,8 @@ async def crawlTotalFinancialInfoQuarter(code, year_info):
     quarter_dict = {}
     financial_info_dict = {}
 
-    target_class_names = ["th_cop_anal8", "th_cop_anal9", "th_cop_anal10",
-                          "th_cop_anal20" ]
+    target_class_names = ["th_cop_anal8", "th_cop_anal9", "th_cop_anal10", "th_cop_anal14",
+                          "th_cop_anal20", "th_cop_anal21"]
 
     for tr in tbody.find_all('tr'):
         th_text = tr.find('th').text.strip()
@@ -180,8 +180,8 @@ async def crawlTotalYearlyAnnual(code):
 
     annual_info = {}
 
-    target_class_names = ["th_cop_anal8", "th_cop_anal9", "th_cop_anal10", 
-                          "th_cop_anal20" ]
+    target_class_names = ["th_cop_anal8", "th_cop_anal9", "th_cop_anal10", "th_cop_anal14",
+                          "th_cop_anal20", "th_cop_anal21"]
 
     if cop_analysis_section:
         tbody = cop_analysis_section.find('tbody')
@@ -223,8 +223,8 @@ async def crawlTotalYearlyQuarter(code):
 
     quarter_info = {}
 
-    target_class_names = ["th_cop_anal8", "th_cop_anal9", "th_cop_anal10", 
-                          "th_cop_anal20" ]
+    target_class_names = ["th_cop_anal8", "th_cop_anal9", "th_cop_anal10", "th_cop_anal14",
+                          "th_cop_anal20", "th_cop_anal21"]
 
     if cop_analysis_section:
         tbody = cop_analysis_section.find('tbody')
