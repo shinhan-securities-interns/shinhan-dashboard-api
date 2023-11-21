@@ -320,7 +320,7 @@ async def getAnnualRevenue(code: str, background_tasks: BackgroundTasks):
         result = await FinancialStatementService.crawlAnnualInfo(code, year_annual_info, financial_info)
 
         if (len(result) == 0):
-            return {"매출액(억원) _최근 연간 실적" : {}}
+            return {"매출액(억원) _최근 연간 실적" : {[]}}
 
         # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
         json_result = json.dumps(result)
@@ -350,7 +350,7 @@ async def getQuarterRevenue(code: str, background_tasks: BackgroundTasks):
         result = await FinancialStatementService.crawlQuarterInfo(code, year_annual_info, financial_info)
 
         if (len(result) == 0):
-            return {"매출액(억원)_최근 분기 실적": {}}
+            return {"매출액(억원)_최근 분기 실적": {[]}}
 
         # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
         json_result = json.dumps(result)
@@ -382,7 +382,7 @@ async def getAnnualOperatingProfit(code: str, background_tasks: BackgroundTasks)
         result = await FinancialStatementService.crawlAnnualInfo(code, year_annual_info, financial_info)
 
         if (len(result) == 0):
-            return {"영업이익(억원)_최근 연간 실적": {}}
+            return {"영업이익(억원)_최근 연간 실적": {[]}}
 
         # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
         json_result = json.dumps(result)
@@ -411,7 +411,7 @@ async def getQuarterOperatingProfit(code: str, background_tasks: BackgroundTasks
         result = await FinancialStatementService.crawlQuarterInfo(code, year_annual_info, financial_info)
 
         if (len(result) == 0):
-            return {"영업이익(억원)_최근 분기 실적": {}}
+            return {"영업이익(억원)_최근 분기 실적": {[]}}
 
         # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
         json_result = json.dumps(result)
@@ -442,7 +442,7 @@ async def getAnnualNetProfit(code: str, background_tasks: BackgroundTasks):
         result = await FinancialStatementService.crawlAnnualInfo(code, year_annual_info, financial_info)
 
         if (len(result) == 0):
-            return {"당기순이익(억원)_최근 연간 실적": {}}
+            return {"당기순이익(억원)_최근 연간 실적": {[]}}
 
         # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
         json_result = json.dumps(result)
@@ -471,7 +471,7 @@ async def getQuarterNetProfit(code: str, background_tasks: BackgroundTasks):
         result = await FinancialStatementService.crawlQuarterInfo(code, year_annual_info, financial_info)
 
         if (len(result) == 0):
-            return {"당기순이익(억원)_최근 분기 실적": {}}
+            return {"당기순이익(억원)_최근 분기 실적": {[]}}
 
         # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
         json_result = json.dumps(result)
@@ -503,7 +503,7 @@ async def getAnnualDebtRatio(code: str, background_tasks: BackgroundTasks):
         result = await FinancialStatementService.crawlAnnualInfo(code, year_annual_info, financial_info)
 
         if (len(result) == 0):
-            return {"PER(배)_최근 연간 실적": {}}
+            return {"PER(배)_최근 연간 실적": {[]}}
 
         # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
         json_result = json.dumps(result)
@@ -532,7 +532,7 @@ async def getQuarterDebtRatio(code: str, background_tasks: BackgroundTasks):
         result = await FinancialStatementService.crawlQuarterInfo(code, year_annual_info, financial_info)
 
         if (len(result) == 0):
-            return {"PER(배)_최근 분기 실적": {}}
+            return {"PER(배)_최근 분기 실적": {[]}}
 
         # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
         json_result = json.dumps(result)
@@ -565,7 +565,7 @@ async def getAnnualTotalFinancialInfo(code: str, background_tasks: BackgroundTas
         year_annual_info = await FinancialStatementService.crawlAnnualYearInfo(code)
 
         if(len(year_annual_info) == 0):
-            return {"최근 연간 실적 총계 - 기준 : 재무정보": {}}
+            return {"최근 연간 실적 총계 - 기준 : 재무정보": {[]}}
 
         result = await FinancialStatementService.crawlTotalFinancialInfoAnnual(code, year_annual_info)
 
@@ -595,7 +595,7 @@ async def getQuarterTotalFinancialInfo(code: str, background_tasks: BackgroundTa
         year_annual_info = await FinancialStatementService.crawlQuarterYearInfo(code)
 
         if(len(year_annual_info) == 0):
-            return {"최근 분기 실적 총계 - 기준 : 재무정보": {}}
+            return {"최근 분기 실적 총계 - 기준 : 재무정보": {[]}}
 
         result = await FinancialStatementService.crawlTotalFinancialInfoQuarter(code, year_annual_info)
 
@@ -627,7 +627,7 @@ async def getAnnualTotalYearly(code: str, background_tasks: BackgroundTasks):
         result = await FinancialStatementService.crawlTotalYearlyAnnual(code)
 
         if(len(result) == 0):
-            return {"최근 연간 실적 총계 - 기준 : 연도": {}}
+            return {"최근 연간 실적 총계 - 기준 : 연도": {[]}}
 
         # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
         json_result = json.dumps(result)
@@ -655,7 +655,7 @@ async def getQuarterTotalYearly(code: str, background_tasks: BackgroundTasks):
         result = await FinancialStatementService.crawlTotalYearlyQuarter(code)
 
         if (len(result) == 0):
-            return {"최근 분기 실적 총계 - 기준 : 연도": {}}
+            return {"최근 분기 실적 총계 - 기준 : 연도": {[]}}
 
         # 결과를 JSON 형식으로 직렬화하여 Redis에 저장
         json_result = json.dumps(result)
