@@ -8,13 +8,12 @@ import httpx
 from apscheduler.triggers.interval import IntervalTrigger
 from bs4 import BeautifulSoup
 from fastapi import FastAPI, BackgroundTasks
-import database.RedisDriver
+from database.RedisDriver import RedisDriver
 import services.FinancialStatementService as FinancialStatementService
 import services.StockTalkService as StockTalkService
 from fastapi.middleware.cors import CORSMiddleware
-import requests
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
-from apscheduler.triggers.cron import CronTrigger
+from databases import Database
 current_directory = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(current_directory, "controllers"))
 sys.path.append(os.path.join(current_directory, "services"))
@@ -24,6 +23,9 @@ app = FastAPI()
 REDIS_HOST = os.environ.get('REDIS_HOST', 'localhost')
 REDIS_PORT = os.environ.get('REDIS_PORT', '6322')
 
+
+DATABASE_URL = "mysql+pymysql://admin:abcd1234!@database-1.coibefbchrij.ap-northeast-2.rds.amazonaws.com:3306/mys2d"
+database = Database(DATABASE_URL)
 
 
 def get_app():
@@ -51,42 +53,63 @@ async def startup_event():
     print("startup_event")
     try:
         if not hasattr(app.state, 'redis_KospiKosdaq_contents'):
-            app.state.redis_KospiKosdaq_contents = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/0")
+            app.state.redis_KospiKosdaq_contents = RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/0")
+
         # 이미 추가한 속성인지 확인한 후 추가
         if not hasattr(app.state, 'redis_stocktalk_contents'):
-            app.state.redis_stocktalk_contents = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/3")
+            app.state.redis_stocktalk_contents = RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/3")
 
         if not hasattr(app.state, 'revenue_AnnualAndQuarter'):
-            app.state.revenue_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/4")
+            app.state.revenue_AnnualAndQuarter = RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/4")
 
         if not hasattr(app.state, 'operating_profit_AnnualAndQuarter'):
-            app.state.operating_profit_AnnualAndQuarter = database.RedisDriver.RedisDriver(
+            app.state.operating_profit_AnnualAndQuarter = RedisDriver(
                 f"{REDIS_HOST}:{REDIS_PORT}/5")
 
         if not hasattr(app.state, 'net_profit_AnnualAndQuarter'):
-            app.state.net_profit_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/6")
+            app.state.net_profit_AnnualAndQuarter = RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/6")
 
         if not hasattr(app.state, 'debt_ratio_AnnualAndQuarter'):
-            app.state.debt_ratio_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/7")
+            app.state.debt_ratio_AnnualAndQuarter = RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/7")
 
         if not hasattr(app.state, 'per_AnnualAndQuarter'):
-            app.state.per_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/8")
+            app.state.per_AnnualAndQuarter = RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/8")
 
         if not hasattr(app.state, 'pbr_AnnualAndQuarter'):
-            app.state.pbr_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/9")
+            app.state.pbr_AnnualAndQuarter = RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/9")
 
         if not hasattr(app.state, 'totalFinancialInfo_AnnualAndQuarter'):
-            app.state.totalFinancialInfo_AnnualAndQuarter = database.RedisDriver.RedisDriver(
+            app.state.totalFinancialInfo_AnnualAndQuarter = RedisDriver(
                 f"{REDIS_HOST}:{REDIS_PORT}/10")
 
         if not hasattr(app.state, 'totalYearly_AnnualAndQuarter'):
-            app.state.totalYearly_AnnualAndQuarter = database.RedisDriver.RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/11")
+            app.state.totalYearly_AnnualAndQuarter = RedisDriver(f"{REDIS_HOST}:{REDIS_PORT}/11")
 
         app.state.http_client = httpx.AsyncClient()
         asyncio.create_task(cacheKospiKosdaq())
+        await database.connect()
+
 
     except Exception as e:
         print(f"An error occurred during startup: {e}")
+
+
+@app.get("/prediction/kospi/kosdaq")
+async def read_latest_kospi():
+    kospi_query = "SELECT kospi FROM prediction ORDER BY created_at DESC LIMIT 1"
+    kosdaq_query = "SELECT kosdaq FROM prediction ORDER BY created_at DESC LIMIT 1"
+
+    kospi_result = await database.fetch_one(kospi_query)
+    kosdaq_result = await database.fetch_one(kosdaq_query)
+
+    # 각 결과에서 'kospi' 및 'kosdaq' 필드의 값 추출
+    kospi_prediction = kospi_result["kospi"] if kospi_result else None
+    kosdaq_prediction = kosdaq_result["kosdaq"] if kosdaq_result else None
+
+    return {
+        "kospi_prediction": kospi_prediction,
+        "kosdaq_prediction": kosdaq_prediction
+    }
 
 
 @app.get("/stock-talk/{code}")

@@ -68,3 +68,9 @@ dependencies:
   - xz
   - zlib
   - apscheduler
+  - pymysql
+  - aio-databases
+  - pip:
+  - pip:
+      - databases
+      - aiomysql
