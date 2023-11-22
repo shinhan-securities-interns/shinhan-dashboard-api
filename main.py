@@ -295,7 +295,7 @@ async def getKospiKosdaq():
     }
 
 scheduler = AsyncIOScheduler()
-scheduler.add_job(cacheKospiKosdaq, IntervalTrigger(seconds=1000))
+scheduler.add_job(cacheKospiKosdaq, IntervalTrigger(seconds=2))
 
 # 스케줄러 시작
 scheduler.start()
